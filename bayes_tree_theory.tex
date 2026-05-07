@@ -1,0 +1,410 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+
+\newcommand\YAMLkeystyle{\color{black}\bfseries}
+\newcommand\YAMLvaluestyle{\color{blue}\mdseries}
+
+\lstdefinelanguage{yaml}
+{
+  keywords={true,false,null,y,n},
+  keywordstyle=\color{darkgray}\bfseries,
+  basicstyle=\YAMLkeystyle,
+  sensitive=false,
+  comment=[l]{\#},
+  morecomment=[s]{/*}{*/},
+  commentstyle=\color{purple}\ttfamily,
+  stringstyle=\YAMLvaluestyle\ttfamily,
+  moredelim=[l][\color{orange}]{\&},
+  moredelim=[l][\color{magenta}]{*},
+  moredelim=**[il][\color{purple}]{:},
+  morestring=[b]',
+  morestring=[b]"
+}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{gray!10},
+  frame=single,
+  breaklines=true,
+  keywordstyle=\color{blue},
+  commentstyle=\color{green!50!black},
+  stringstyle=\color{red!70!black},
+}
+
+\title{Bayesian Decision Tree with Monte Carlo Simulation\\[0.5em]
+\large Theory, Implementation, and YAML Configuration Guide}
+\author{Ari-Pekka Sihvonen\\
+\texttt{ap.sihvonen@gmail.com}}
+\date{\copyright\ 2026 — MIT License}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This document describes the theory, implementation, and usage of
+\texttt{bayes-tree-eng.py}, a tool that encodes hypotheses as Bayesian decision
+trees and uses Monte Carlo simulation to propagate uncertainty. Top-level
+branches act as independent evidence combined at the root via likelihood ratios
+in log-odds space. The tool produces posterior distributions, sensitivity
+analyses, and importance rankings.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+%═══════════════════════════════════════════════════════════════════════════════
+\section{Introduction}
+
+The Bayesian Decision Tree tool combines Bayesian inference with Monte Carlo
+simulation to propagate uncertainty through a tree of evidence. Each branch
+of the tree represents an independent piece of evidence characterized by a
+\emph{likelihood ratio} (LR), and the tool computes a posterior probability
+distribution for the root hypothesis.
+
+The motivation is to provide a structured, transparent framework for combining
+multiple heuristic likelihood ratios into a posterior probability. It is useful
+for exploratory ``what-if'' analysis, sensitivity studies, and producing an
+interpretable tree of how local evidence shifts beliefs.
+
+%═══════════════════════════════════════════════════════════════════════════════
+\section{Theoretical Background}
+
+\subsection{Bayes' Theorem}
+
+For a hypothesis $H$ and evidence $E$:
+\begin{equation}
+P(H|E) = \frac{P(E|H)\,P(H)}{P(E)}
+\end{equation}
+
+The \textbf{likelihood ratio} (LR) form is:
+\begin{equation}
+\text{LR} = \frac{P(E|H)}{P(E|\neg H)}
+\end{equation}
+
+\subsection{Log-Odds Representation}
+
+Converting probability to log-odds:
+\begin{equation}
+\text{lo}(p) = \ln\frac{p}{1-p}
+\end{equation}
+
+And back:
+\begin{equation}
+p = \frac{1}{1 + e^{-\text{lo}}}
+\end{equation}
+
+A Bayesian update in log-odds space is simply additive:
+\begin{equation}
+\text{lo}(P(H|E)) = \text{lo}(P(H)) + \ln(\text{LR})
+\end{equation}
+
+This additive property makes it natural to combine multiple independent pieces
+of evidence.
+
+\subsection{Combining Independent Evidence}
+
+Given $n$ independent evidence branches with likelihood ratios
+$\text{LR}_1, \text{LR}_2, \ldots, \text{LR}_n$, the combined posterior
+in log-odds is:
+\begin{equation}
+\text{lo}(\text{posterior}) = \text{lo}(\text{prior}) + \sum_{i=1}^{n} \ln(\text{LR}_i)
+\end{equation}
+
+Equivalently, in odds form:
+\begin{equation}
+\text{odds}(H \mid E_{1:n}) = \text{odds}(H) \prod_{i=1}^{n} \text{LR}_i
+\end{equation}
+
+The tool computes this at the root level, treating each top-level child as an
+independent evidence source.
+
+\subsection{Effective Likelihood Ratio}
+
+The \emph{effective LR} is the single likelihood ratio that would produce the
+same posterior from the given prior:
+\begin{equation}
+\text{LR}_{\text{eff}} = \exp\!\Big(\text{lo}(\text{posterior}) - \text{lo}(\text{prior})\Big)
+\end{equation}
+
+\subsection{Monte Carlo Uncertainty Propagation}
+
+When the LR for each branch is uncertain (specified as an interval rather than
+a point value), the tool uses Monte Carlo simulation:
+
+\begin{enumerate}
+\item For each simulation run, sample an LR from each branch's distribution.
+\item Compute the combined posterior using the log-odds sum.
+\item Repeat $N$ times (default: 10{,}000) to build a posterior distribution.
+\item Report summary statistics: median, mean, 90\% credible interval.
+\end{enumerate}
+
+\subsection{LR Sampling Distributions}
+
+Three distributions are available for sampling LR values from the interval
+$[\text{lr\_min}, \text{lr\_max}]$:
+
+\begin{description}
+\item[log\_uniform] (default) --- Uniform in log-space. Best when uncertainty
+  spans orders of magnitude. The sampled value is:
+  \begin{equation}
+  \text{LR} = \exp\!\Big(\text{Uniform}\big(\ln(\text{lr\_min}),\, \ln(\text{lr\_max})\big)\Big)
+  \end{equation}
+
+\item[uniform] --- Uniform in linear space:
+  \begin{equation}
+  \text{LR} = \text{Uniform}(\text{lr\_min},\, \text{lr\_max})
+  \end{equation}
+
+\item[beta] --- Beta distribution scaled to the interval, controlled by
+  parameters \texttt{lr\_alpha} and \texttt{lr\_beta}:
+  \begin{equation}
+  \text{LR} = \text{lr\_min} + \text{Beta}(\alpha, \beta) \times (\text{lr\_max} - \text{lr\_min})
+  \end{equation}
+\end{description}
+
+%═══════════════════════════════════════════════════════════════════════════════
+\section{Tree Structure and Chaining}
+
+The tree has two distinct roles:
+\begin{itemize}
+\item \textbf{Root level:} Children are combined as independent evidence
+  (log-odds sum). Each child contributes its own LR to the root posterior.
+\item \textbf{Sub-levels:} Children represent drill-down or decomposition of
+  the parent evidence. The child's prior is set to the parent's posterior
+  (chaining), showing how the probability evolves through successive reasoning
+  steps.
+\end{itemize}
+
+Importantly, children of top-level branches are \emph{not} multiplied into the
+root combination. They only serve to explain or decompose a branch's LR. If
+child-level evidence should aggregate to the root, the model must be
+restructured so that the relevant nodes appear at the top level.
+
+%═══════════════════════════════════════════════════════════════════════════════
+\section{Sensitivity Analysis}
+
+The tool provides two sensitivity measures:
+\begin{enumerate}
+\item \textbf{Threshold probabilities:} $P(\text{posterior} < 5\%)$,
+  $P(\text{posterior} < 10\%)$, $P(\text{posterior} > 50\%)$.
+\item \textbf{Leave-one-out ranking:} For each branch, compute the posterior
+  without that branch. The difference from the baseline median shows how much
+  each branch influences the result.
+\end{enumerate}
+
+%═══════════════════════════════════════════════════════════════════════════════
+\section{YAML File Structure}
+
+The input is a YAML file defining a tree of evidence. Below is the complete
+specification.
+
+\subsection{Root Node}
+
+\begin{lstlisting}[language=yaml]
+node: "Hypothesis name"
+prior: 0.5                  # Prior probability (0 to 1)
+children:
+  - ...                     # List of evidence branches
+\end{lstlisting}
+
+\subsection{Evidence Node}
+
+Each child node represents one piece of evidence:
+
+\begin{lstlisting}[language=yaml]
+- node: "Evidence description"
+  evidence_type: for        # "for", "against", or "neutral"
+
+  # Option A: Point estimate
+  likelihood_ratio: 2.5     # Exact LR value
+
+  # Option B: Uncertainty interval (preferred)
+  lr_min: 0.01              # Lower bound of LR
+  lr_max: 0.10              # Upper bound of LR
+  lr_dist: log_uniform      # Distribution: log_uniform | uniform | beta
+
+  # Optional for beta distribution
+  lr_alpha: 2               # Beta shape parameter alpha
+  lr_beta: 2                # Beta shape parameter beta
+
+  # Optional sub-evidence (drill-down)
+  children:
+    - node: "Sub-evidence"
+      evidence_type: for
+      likelihood_ratio: 1.5
+\end{lstlisting}
+
+\subsection{Evidence Type}
+
+\begin{description}
+\item[for] --- Evidence supporting the hypothesis ($\text{LR} > 1$).
+\item[against] --- Evidence against the hypothesis ($\text{LR} < 1$).
+\item[neutral] --- Uninformative evidence ($\text{LR} \approx 1$).
+\end{description}
+
+The tool validates that \texttt{evidence\_type} is consistent with the LR
+values and warns if there is a mismatch.
+
+\subsection{Likelihood Ratio Interpretation}
+
+\begin{center}
+\begin{tabular}{ll}
+\hline
+\textbf{LR value} & \textbf{Meaning} \\
+\hline
+LR $\gg$ 1 & Strong evidence for the hypothesis \\
+LR $>$ 1   & Moderate evidence for \\
+LR $=$ 1   & Neutral (no update) \\
+LR $<$ 1   & Evidence against \\
+LR $\ll$ 1 & Strong evidence against \\
+\hline
+\end{tabular}
+\end{center}
+
+%═══════════════════════════════════════════════════════════════════════════════
+\section{Complete YAML Example}
+
+\begin{lstlisting}[language=yaml]
+node: "Patient has disease X"
+prior: 0.10
+children:
+  - node: "Positive blood test"
+    evidence_type: for
+    lr_min: 3.0
+    lr_max: 8.0
+    lr_dist: log_uniform
+    children:
+      - node: "Test specificity concerns"
+        evidence_type: against
+        lr_min: 0.5
+        lr_max: 0.9
+
+  - node: "Family history present"
+    evidence_type: for
+    likelihood_ratio: 2.0
+
+  - node: "Age below typical onset"
+    evidence_type: against
+    lr_min: 0.3
+    lr_max: 0.7
+    lr_dist: uniform
+
+  - node: "Symptom pattern matches"
+    evidence_type: for
+    lr_min: 1.5
+    lr_max: 4.0
+    lr_dist: beta
+    lr_alpha: 2
+    lr_beta: 3
+\end{lstlisting}
+
+%═══════════════════════════════════════════════════════════════════════════════
+\section{Usage}
+
+\subsection{Running the Tool}
+
+\begin{lstlisting}[language=bash]
+# Default: 10,000 simulations
+python bayes-tree-eng.py examples/mycase.yaml
+
+# Custom number of simulations
+python bayes-tree-eng.py examples/mycase.yaml 50000
+\end{lstlisting}
+
+\subsection{Output Sections}
+
+The tool produces the following output:
+\begin{enumerate}
+\item \textbf{Validation warnings} --- Flags any inconsistencies between
+  \texttt{evidence\_type} and LR values.
+\item \textbf{Combined posterior} --- Summary statistics (median, mean, CI)
+  and ASCII histogram of the posterior distribution.
+\item \textbf{Tree view} --- Hierarchical display showing each branch's
+  contribution, with prior $\to$ posterior transitions.
+\item \textbf{Sensitivity analysis} --- Threshold probabilities.
+\item \textbf{Importance ranking} --- Leave-one-out analysis showing which
+  branches have the most influence.
+\end{enumerate}
+
+\subsection{Tips for Creating YAML Files}
+
+\begin{enumerate}
+\item \textbf{Start with the prior.} What is the base rate or initial
+  probability before any evidence is considered?
+\item \textbf{List independent evidence.} Each top-level child should be
+  logically independent of the others.
+\item \textbf{Prefer intervals over point estimates.} Using \texttt{lr\_min}
+  and \texttt{lr\_max} captures your uncertainty about the strength of
+  evidence.
+\item \textbf{Use log\_uniform for uncertain LRs.} When you know the LR is
+  ``somewhere between 0.01 and 0.1'' but aren't sure where, log-uniform
+  gives appropriate weight to different orders of magnitude.
+\item \textbf{Add children for drill-down.} Sub-nodes explain or decompose
+  a parent's evidence but don't add to the root combination.
+\item \textbf{Validate your intuitions.} Run the tool and check that the
+  output matches your qualitative expectation. If not, reconsider your LR
+  estimates.
+\end{enumerate}
+
+%═══════════════════════════════════════════════════════════════════════════════
+\section{Limitations and Assumptions}
+
+\begin{itemize}
+\item \textbf{Independence assumption.} Top-level branches are assumed
+  conditionally independent given $H$ and $\neg H$. This is a strong
+  assumption and should be scrutinized when modeling correlated evidence.
+  In practice, if two branches share a common information source, they
+  should be merged or one should be made a sub-node of the other.
+
+\item \textbf{Children do not aggregate to root.} Children are used only for
+  chained drill-down display. If child-level evidence should contribute to
+  the root posterior, the model must be restructured so that the relevant
+  nodes appear at the top level.
+
+\item \textbf{Log-uniform bias.} The default log-uniform sampling biases
+  toward multiplicative scales. Users should choose a distribution that
+  reflects their actual beliefs about where in the interval the true LR lies.
+
+\item \textbf{Subjective LR estimates.} The tool is only as good as the
+  likelihood ratios you assign. It makes subjective reasoning transparent
+  and quantitative, but does not eliminate subjectivity.
+
+\item \textbf{Numerical stability.} The implementation clamps probabilities
+  and log-odds to safe numerical ranges to avoid overflow, which may
+  slightly affect extreme posteriors (very close to 0 or 1).
+\end{itemize}
+
+%═══════════════════════════════════════════════════════════════════════════════
+\section{Implementation Notes}
+
+\begin{itemize}
+\item \textbf{Log-odds stability:} Probabilities are clamped to
+  $[10^{-12},\, 1-10^{-12}]$ before log-odds conversion; log-odds are
+  clamped to $[-700, 700]$ before exponentiation.
+\item \textbf{Sampling:} The same random draw strategy is applied per
+  simulation; users can set simulation counts via the command line.
+\item \textbf{Tree view:} A recursive collection routine computes node-level
+  posteriors by feeding a parent's posterior median as prior into children,
+  producing local medians and credible intervals.
+\item \textbf{Effective LR for root:} The root node's LR interval is derived
+  from the 5th--95th percentiles of the effective LR distribution across all
+  Monte Carlo runs.
+\end{itemize}
+
+%═══════════════════════════════════════════════════════════════════════════════
+\section{Dependencies}
+
+The Python script requires:
+\begin{itemize}
+\item Python 3.8+
+\item \texttt{PyYAML} (\texttt{pip install pyyaml})
+\end{itemize}
+
+\end{document}

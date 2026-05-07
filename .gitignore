@@ -1,0 +1,27 @@
+# Build artifacts
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
+*:Zone.Identifier
+*:Avecto.Zone.Identifier
+*:PG$Secure
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo

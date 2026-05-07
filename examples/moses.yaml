@@ -1,0 +1,204 @@
+# Hypothesis: There was a real historical person behind the Moses legend,
+# however different from the Exodus account.
+# Prior: 0.20 — skeptical but open. Extraordinary claims require
+# stronger evidence, but a historical kernel is not impossible.
+#
+# Key distinction: we do NOT require 600,000 Israelites, plagues,
+# or parting of the sea. We only ask: was there a real person
+# whose memory contributed to the Moses tradition?
+
+node: "A historical person exists behind the Moses legend?"
+prior: 0.20
+
+children:
+
+  # ── FOR HISTORICITY ───────────────────────────────────────────────────────
+
+  - node: "Egyptian name and cultural context are historically plausible"
+    lr_min: 1.5
+    lr_max: 4.0
+    lr_dist: log_uniform
+    evidence_type: for
+    children:
+      - node: "Moses (Mosheh) derives from Egyptian mss — 'born of', 'son of'"
+        lr_min: 1.5
+        lr_max: 4.0
+        evidence_type: for
+      - node: "Egyptian names common among Levites — Aaron, Phinehas, Merari"
+        lr_min: 1.5
+        lr_max: 3.5
+        evidence_type: for
+      - node: "Egyptian naming conventions suggest genuine Egyptian contact"
+        lr_min: 1.2
+        lr_max: 3.0
+        evidence_type: for
+      - node: "Name could have been assigned retroactively to a legendary figure"
+        lr_min: 0.4
+        lr_max: 0.8
+        evidence_type: against
+
+  - node: "Semitic slaves in Egypt are historically documented"
+    lr_min: 1.5
+    lr_max: 3.5
+    lr_dist: log_uniform
+    evidence_type: for
+    children:
+      - node: "Papyrus Brooklyn lists Semitic slaves in Egypt 18th century BCE"
+        lr_min: 1.5
+        lr_max: 3.5
+        evidence_type: for
+      - node: "Habiru/Apiru laborers documented in Egyptian records"
+        lr_min: 1.5
+        lr_max: 3.0
+        evidence_type: for
+      - node: "Amarna letters mention Semitic groups in Canaan and Egypt"
+        lr_min: 1.2
+        lr_max: 2.5
+        evidence_type: for
+      - node: "Semitic slaves existing does not require a Moses figure"
+        lr_min: 0.5
+        lr_max: 0.9
+        evidence_type: against
+
+  - node: "Traditions of Midianite/Kenite origin of Yahwism suggest historical contact"
+    lr_min: 1.2
+    lr_max: 3.0
+    lr_dist: log_uniform
+    evidence_type: for
+    children:
+      - node: "Moses's Midianite father-in-law Jethro introduces Yahweh worship"
+        lr_min: 1.2
+        lr_max: 3.0
+        evidence_type: for
+      - node: "Kenite hypothesis has strong scholarly support (Albright, Cross)"
+        lr_min: 1.2
+        lr_max: 2.5
+        evidence_type: for
+      - node: "Could reflect tribal memory of Midianite religious contact without Moses"
+        lr_min: 0.4
+        lr_max: 0.8
+        evidence_type: against
+
+  - node: "Memory of a lawgiver figure is widespread and culturally specific"
+    lr_min: 1.1
+    lr_max: 2.5
+    lr_dist: log_uniform
+    evidence_type: for
+    children:
+      - node: "Specific legal and cultic traditions attributed to Moses are detailed"
+        lr_min: 1.1
+        lr_max: 2.5
+        evidence_type: for
+      - node: "Lawgiver traditions (Hammurabi, Solon) often have historical cores"
+        lr_min: 1.1
+        lr_max: 2.0
+        evidence_type: for
+      - node: "Lawgiver figures are common literary constructs — need not be historical"
+        lr_min: 0.4
+        lr_max: 0.8
+        evidence_type: against
+
+  # ── AGAINST HISTORICITY ────────────────────────────────────────────────────
+
+  - node: "No Egyptian records mention Moses, Israelites, or the Exodus"
+    lr_min: 0.05
+    lr_max: 0.25
+    lr_dist: log_uniform
+    evidence_type: against
+    children:
+      - node: "Egypt kept meticulous records — no mention of mass Israelite presence"
+        lr_min: 0.05
+        lr_max: 0.20
+        evidence_type: against
+      - node: "No reference to ten plagues, death of firstborn, or loss of army"
+        lr_min: 0.05
+        lr_max: 0.20
+        evidence_type: against
+      - node: "Egyptians rarely recorded defeats — absence not conclusive"
+        lr_min: 1.5
+        lr_max: 3.0
+        evidence_type: for
+      - node: "Merneptah Stele (1208 BCE) mentions Israel in Canaan — not Egypt"
+        lr_min: 0.3
+        lr_max: 0.7
+        evidence_type: against
+
+  - node: "Archaeology shows Israelites emerged from Canaanite population"
+    lr_min: 0.05
+    lr_max: 0.20
+    lr_dist: log_uniform
+    evidence_type: against
+    children:
+      - node: "No cultural discontinuity in Canaan consistent with Exodus migration"
+        lr_min: 0.05
+        lr_max: 0.20
+        evidence_type: against
+      - node: "Iron Age Israel shows material culture continuous with Late Bronze Canaan"
+        lr_min: 0.05
+        lr_max: 0.20
+        evidence_type: against
+      - node: "Finkelstein and Silberman: Israelites were indigenous Canaanites"
+        lr_min: 0.10
+        lr_max: 0.25
+        evidence_type: against
+      - node: "A small group exodus could leave no archaeological trace"
+        lr_min: 1.5
+        lr_max: 3.5
+        evidence_type: for
+
+  - node: "The birth narrative is a literary type-scene found elsewhere"
+    lr_min: 0.15
+    lr_max: 0.45
+    lr_dist: log_uniform
+    evidence_type: against
+    children:
+      - node: "Sargon of Akkad legend: infant in basket, rescued, becomes king"
+        lr_min: 0.15
+        lr_max: 0.40
+        evidence_type: against
+      - node: "Exposed infant motif is a widespread legendary pattern"
+        lr_min: 0.20
+        lr_max: 0.50
+        evidence_type: against
+      - node: "Borrowed narrative motifs do not preclude a historical core"
+        lr_min: 1.2
+        lr_max: 2.5
+        evidence_type: for
+
+  - node: "Exodus narrative shows late literary composition not eyewitness memory"
+    lr_min: 0.10
+    lr_max: 0.35
+    lr_dist: log_uniform
+    evidence_type: against
+    children:
+      - node: "Pentateuch composed 8th-5th century BCE — centuries after alleged events"
+        lr_min: 0.10
+        lr_max: 0.30
+        evidence_type: against
+      - node: "Documentary hypothesis: J, E, D, P sources compiled over centuries"
+        lr_min: 0.15
+        lr_max: 0.35
+        evidence_type: against
+      - node: "Long oral traditions can preserve historical kernels across centuries"
+        lr_min: 1.2
+        lr_max: 2.5
+        evidence_type: for
+
+  - node: "No independent corroboration from neighboring cultures"
+    lr_min: 0.15
+    lr_max: 0.45
+    lr_dist: log_uniform
+    evidence_type: against
+    children:
+      - node: "Assyrian, Babylonian, Hittite records contain no Moses reference"
+        lr_min: 0.20
+        lr_max: 0.50
+        evidence_type: against
+      - node: "Earliest non-biblical mentions of Moses are Hellenistic (Hecataeus, 300 BCE)"
+        lr_min: 0.20
+        lr_max: 0.50
+        evidence_type: against
+      - node: "Regional figures often unattested outside their own tradition"
+        lr_min: 1.2
+        lr_max: 2.5
+        evidence_type: for

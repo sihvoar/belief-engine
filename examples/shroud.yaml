@@ -1,0 +1,76 @@
+node: "Is the Shroud of Turin authentic?"
+prior: 0.50
+children:
+  - node: "Radiocarbon dating"
+    lr_min: 0.01
+    lr_max: 0.05
+    evidence_type: against
+    children:
+      - node: "Oxford laboratory"
+        lr_min: 0.05
+        lr_max: 0.15
+        evidence_type: against
+      - node: "Zürich laboratory"
+        lr_min: 0.05
+        lr_max: 0.15
+        evidence_type: against
+      - node: "Arizona laboratory"
+        lr_min: 0.05
+        lr_max: 0.15
+        evidence_type: against
+      - node: "Contamination claim"
+        lr_min: 1.5
+        lr_max: 5.0
+        evidence_type: for
+        children:
+          - node: "Laboratories took this into account"
+            lr_min: 0.1
+            lr_max: 0.3
+            evidence_type: against
+
+  - node: "Historical sources"
+    lr_min: 0.05
+    lr_max: 0.20
+    evidence_type: against
+    children:
+      - node: "No mention before the 1350s"
+        lr_min: 0.10
+        lr_max: 0.30
+        evidence_type: against
+      - node: "Bishop of Troyes called it a forgery in 1389"
+        lr_min: 0.05
+        lr_max: 0.20
+        evidence_type: against
+      - node: "Medieval relic industry was well known"
+        lr_min: 0.20
+        lr_max: 0.40
+        evidence_type: against
+
+  - node: "Image properties"
+    lr_min: 2.0
+    lr_max: 6.0
+    evidence_type: for
+    children:
+      - node: "3D information in the cloth"
+        lr_min: 1.5
+        lr_max: 3.0
+        evidence_type: for
+      - node: "Negative image"
+        lr_min: 1.5
+        lr_max: 3.0
+        evidence_type: for
+        children:
+          - node: "Explainable by medieval technique"
+            lr_min: 0.2
+            lr_max: 0.6
+            evidence_type: against
+
+  - node: "Wound anatomy"
+    lr_min: 1.5
+    lr_max: 3.0
+    evidence_type: against
+    children:
+      - node: "Could still be a skilled forger"
+        lr_min: 0.3
+        lr_max: 0.7
+        evidence_type: against

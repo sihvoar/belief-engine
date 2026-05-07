@@ -1,0 +1,149 @@
+node: "Hitler was murdered — did not shoot himself?"
+prior: 0.50
+
+children:
+
+  # ── SUPPORTING THE MURDER HYPOTHESIS ──────────────────────────────────────
+
+  - node: "Soviet Union concealed evidence for decades"
+    lr_min: 1.5
+    lr_max: 3.5
+    lr_dist: log_uniform
+    evidence_type: for
+    children:
+      - node: "Stalin publicly claimed Hitler had escaped — deliberate disinformation"
+        lr_min: 1.5
+        lr_max: 3.0
+        evidence_type: for
+      - node: "KGB kept teeth and skull fragments secret 1945–2000"
+        lr_min: 1.2
+        lr_max: 2.5
+        evidence_type: for
+      - node: "Secrecy is also explained by political utility of uncertainty"
+        lr_min: 0.4
+        lr_max: 0.8
+        evidence_type: against
+
+  - node: "Body was never officially identified in the West"
+    lr_min: 1.2
+    lr_max: 2.5
+    lr_dist: log_uniform
+    evidence_type: for
+    children:
+      - node: "Western investigation relied only on eyewitnesses not the body"
+        lr_min: 1.2
+        lr_max: 2.5
+        evidence_type: for
+      - node: "Eyewitnesses were Hitler loyalists — motive to lie"
+        lr_min: 1.2
+        lr_max: 2.5
+        evidence_type: for
+      - node: "Eyewitness accounts are consistent with each other"
+        lr_min: 0.2
+        lr_max: 0.5
+        evidence_type: against
+
+  - node: "Escape route to Argentina was theoretically possible"
+    lr_min: 1.1
+    lr_max: 2.0
+    lr_dist: log_uniform
+    evidence_type: for
+    children:
+      - node: "ODESSA network helped Nazi leaders escape"
+        lr_min: 1.2
+        lr_max: 2.0
+        evidence_type: for
+      - node: "Eichmann and Mengele escaped — precedents exist"
+        lr_min: 1.1
+        lr_max: 1.8
+        evidence_type: for
+      - node: "Hitler's fame made escape practically impossible"
+        lr_min: 0.1
+        lr_max: 0.3
+        evidence_type: against
+
+  # ── SUPPORTING THE SUICIDE HYPOTHESIS (against murder) ────────────────────
+
+  - node: "2018 DNA analysis confirmed teeth as Hitler's"
+    lr_min: 0.02
+    lr_max: 0.10
+    lr_dist: log_uniform
+    evidence_type: against
+    children:
+      - node: "French researchers analyzed KGB-preserved teeth"
+        lr_min: 0.02
+        lr_max: 0.08
+        evidence_type: against
+      - node: "Teeth matched 1944 dental X-rays perfectly"
+        lr_min: 0.02
+        lr_max: 0.08
+        evidence_type: against
+      - node: "Analysis also confirmed traces of cyanide poisoning in teeth"
+        lr_min: 0.05
+        lr_max: 0.15
+        evidence_type: against
+      - node: "Teeth could have been swapped before death"
+        lr_min: 2.0
+        lr_max: 5.0
+        evidence_type: for
+
+  - node: "Consistent accounts from multiple eyewitnesses"
+    lr_min: 0.10
+    lr_max: 0.35
+    lr_dist: log_uniform
+    evidence_type: against
+    children:
+      - node: "Otto Günsche and Heinz Linge testified to suicide"
+        lr_min: 0.10
+        lr_max: 0.30
+        evidence_type: against
+      - node: "Accounts have remained consistent for decades"
+        lr_min: 0.10
+        lr_max: 0.35
+        evidence_type: against
+      - node: "Bunker staff burned the body — they testified to this as well"
+        lr_min: 0.10
+        lr_max: 0.30
+        evidence_type: against
+      - node: "Loyal personnel had motive to protect Hitler's reputation"
+        lr_min: 1.5
+        lr_max: 3.0
+        evidence_type: for
+
+  - node: "Hitler's health made escape implausible"
+    lr_min: 0.10
+    lr_max: 0.35
+    lr_dist: log_uniform
+    evidence_type: against
+    children:
+      - node: "Parkinson's disease — tremors and mobility difficulties in April 1945"
+        lr_min: 0.10
+        lr_max: 0.30
+        evidence_type: against
+      - node: "Psychological collapse — no longer in touch with reality"
+        lr_min: 0.15
+        lr_max: 0.40
+        evidence_type: against
+      - node: "Publicly recognizable person — escape opportunity minimal"
+        lr_min: 0.05
+        lr_max: 0.20
+        evidence_type: against
+
+  - node: "Testament and marriage just before death"
+    lr_min: 0.05
+    lr_max: 0.20
+    lr_dist: log_uniform
+    evidence_type: against
+    children:
+      - node: "Hitler married Eva Braun on 29 April 1945"
+        lr_min: 0.05
+        lr_max: 0.20
+        evidence_type: against
+      - node: "Wrote a political testament — not the act of someone fleeing"
+        lr_min: 0.05
+        lr_max: 0.20
+        evidence_type: against
+      - node: "Testament and marriage could have been staged"
+        lr_min: 2.0
+        lr_max: 4.0
+        evidence_type: for

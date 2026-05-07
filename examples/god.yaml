@@ -1,0 +1,227 @@
+node: "Does a theistic God exist?"
+prior: 0.50
+
+children:
+
+  # ── SUPPORTING EVIDENCE ───────────────────────────────────────────────────
+
+  - node: "Cosmological argument"
+    lr_min: 1.2
+    lr_max: 3.0
+    lr_dist: log_uniform
+    evidence_type: for
+    children:
+      - node: "The universe has a beginning (Big Bang)"
+        lr_min: 1.1
+        lr_max: 2.0
+        evidence_type: for
+      - node: "A causal chain requires a first cause"
+        lr_min: 1.1
+        lr_max: 2.5
+        evidence_type: for
+      - node: "Quantum mechanics allows spontaneous genesis"
+        lr_min: 0.3
+        lr_max: 0.8
+        evidence_type: against
+
+  - node: "Fine-tuning argument"
+    lr_min: 1.5
+    lr_max: 4.0
+    lr_dist: log_uniform
+    evidence_type: for
+    children:
+      - node: "Physical constants allow life"
+        lr_min: 1.5
+        lr_max: 4.0
+        evidence_type: for
+      - node: "Many-worlds theory explains without God"
+        lr_min: 0.2
+        lr_max: 0.6
+        evidence_type: against
+      - node: "Fine-tuning favors life but not purpose"
+        lr_min: 0.4
+        lr_max: 0.8
+        evidence_type: against
+
+  - node: "Religious experience"
+    lr_min: 1.2
+    lr_max: 2.5
+    lr_dist: log_uniform
+    evidence_type: for
+    children:
+      - node: "A universal phenomenon across cultures"
+        lr_min: 1.2
+        lr_max: 2.0
+        evidence_type: for
+      - node: "Neuroscience explains experiences in the brain"
+        lr_min: 0.2
+        lr_max: 0.5
+        evidence_type: against
+      - node: "Experiences conflict across different religions"
+        lr_min: 0.3
+        lr_max: 0.7
+        evidence_type: against
+
+  - node: "Moral argument"
+    lr_min: 1.1
+    lr_max: 2.0
+    lr_dist: log_uniform
+    evidence_type: for
+    children:
+      - node: "Universal moral intuitions"
+        lr_min: 1.1
+        lr_max: 1.8
+        evidence_type: for
+      - node: "Evolution explains morality without God"
+        lr_min: 0.2
+        lr_max: 0.6
+        evidence_type: against
+
+  # ── COUNTEREVIDENCE ────────────────────────────────────────────────────────
+
+  - node: "Problem of evil"
+    lr_min: 0.05
+    lr_max: 0.25
+    lr_dist: log_uniform
+    evidence_type: against
+    children:
+      - node: "Natural disasters and child suffering"
+        lr_min: 0.05
+        lr_max: 0.20
+        evidence_type: against
+      - node: "Theodicy: suffering allowed for free will"
+        lr_min: 1.2
+        lr_max: 2.5
+        evidence_type: for
+      - node: "Free will doesn't explain natural disasters"
+        lr_min: 0.2
+        lr_max: 0.5
+        evidence_type: against
+
+  - node: "Ineffectiveness of prayer"
+    lr_min: 0.10
+    lr_max: 0.40
+    lr_dist: log_uniform
+    evidence_type: against
+    children:
+      - node: "Controlled studies do not support prayer effects"
+        lr_min: 0.10
+        lr_max: 0.35
+        evidence_type: against
+      - node: "God is not experimentally testable (preserving freedom)"
+        lr_min: 0.8
+        lr_max: 1.5
+        evidence_type: neutral
+
+  - node: "Psychological and social origins of religion"
+    lr_min: 0.15
+    lr_max: 0.45
+    lr_dist: log_uniform
+    evidence_type: against
+    children:
+      - node: "Belief correlates strongly with parents' religion"
+        lr_min: 0.15
+        lr_max: 0.40
+        evidence_type: against
+      - node: "Agent-detection (HADD) explains belief in gods"
+        lr_min: 0.20
+        lr_max: 0.50
+        evidence_type: against
+      - node: "Truth does not depend on origin of belief"
+        lr_min: 0.8
+        lr_max: 1.2
+        evidence_type: neutral
+
+  - node: "Science's explanatory power without God"
+    lr_min: 0.10
+    lr_max: 0.35
+    lr_dist: log_uniform
+    evidence_type: against
+    children:
+      - node: "Evolution explains biological complexity"
+        lr_min: 0.10
+        lr_max: 0.30
+        evidence_type: against
+      - node: "Cosmology explains the origin of the universe"
+        lr_min: 0.15
+        lr_max: 0.40
+        evidence_type: against
+      - node: "Scientific gaps may still leave room for God"
+        lr_min: 0.8
+        lr_max: 1.5
+        evidence_type: neutral
+
+  - node: "Divine hiddenness"
+    lr_min: 0.10
+    lr_max: 0.40
+    lr_dist: log_uniform
+    evidence_type: against
+    children:
+      - node: "A loving God would not leave sincere seekers without experience"
+        lr_min: 0.10
+        lr_max: 0.35
+        evidence_type: against
+      - node: "Hiddenness is by design (Swinburne)"
+        lr_min: 0.8
+        lr_max: 2.0
+        evidence_type: neutral
+
+  - node: "Origin and coherence of the theistic God concept"
+    lr_min: 0.04
+    lr_max: 0.20
+    lr_dist: log_uniform
+    evidence_type: against
+    children:
+      - node: "Definition comes from revealed literature"
+        lr_min: 0.05
+        lr_max: 0.20
+        evidence_type: against
+        children:
+          - node: "Reliability of the Bible/Quran is itself in question"
+            lr_min: 0.05
+            lr_max: 0.25
+            evidence_type: against
+          - node: "Different religions' concepts of God conflict"
+            lr_min: 0.10
+            lr_max: 0.30
+            evidence_type: against
+          - node: "Historical texts reflect cultural context"
+            lr_min: 0.10
+            lr_max: 0.35
+            evidence_type: against
+
+      - node: "Logical coherence of the concept"
+        lr_min: 0.9
+        lr_max: 1.1
+        evidence_type: neutral
+        children:
+          - node: "Omnipotent + omnibenevolent + evil present = logical tension"
+            lr_min: 0.05
+            lr_max: 0.20
+            evidence_type: against
+          - node: "Omniscience + free will = paradox"
+            lr_min: 0.10
+            lr_max: 0.30
+            evidence_type: against
+          - node: "Philosophers have tried to solve these (Plantinga etc.)"
+            lr_min: 0.8
+            lr_max: 1.5
+            evidence_type: neutral
+
+      - node: "Background probability for supernatural personal agents"
+        lr_min: 0.05
+        lr_max: 0.20
+        evidence_type: against
+        children:
+          - node: "All known conscious agents are physical"
+            lr_min: 0.05
+            lr_max: 0.20
+            evidence_type: against
+          - node: "No mechanism for nonphysical mind to affect matter"
+            lr_min: 0.05
+            lr_max: 0.25
+            evidence_type: against
+          - node: "Philosophical possibility doesn't rule out non-physical mind"
+            lr_min: 0.8
+            lr_max: 1.5
+            evidence_type: neutral
