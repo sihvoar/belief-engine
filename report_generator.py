@@ -26,7 +26,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import numpy as np
 
-from bayes_engine import NodeResult
+from bayes_tree import NodeResult
 
 
 def _make_histogram_image(posteriors, width_cm=16, height_cm=8):

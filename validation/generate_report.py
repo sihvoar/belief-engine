@@ -31,7 +31,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import numpy as np
 
-from bayes_engine import (
+from bayes_tree import (
     sim_root, sts, validate_node, bayes_upd,
     to_lo, from_lo, post_to_lr, sample_lr, pct,
     collect, NodeResult, run_simulation,

@@ -23,7 +23,7 @@ YAML structure:
 
 import sys, yaml
 
-from bayes_engine import (
+from bayes_tree import (
     to_lo, from_lo, bayes_upd, post_to_lr, sample_lr,
     validate_node, sim_root, pct, sts, collect, NodeResult,
 )

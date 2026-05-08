@@ -13,7 +13,7 @@ import random
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import yaml
-from bayes_engine import (
+from bayes_tree import (
     sim_root, sts, validate_node, bayes_upd,
     to_lo, from_lo, post_to_lr, sample_lr, pct,
     collect, NodeResult, run_simulation,

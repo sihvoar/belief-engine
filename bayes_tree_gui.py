@@ -34,7 +34,7 @@ from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 import matplotlib.ticker as mticker
 
-from bayes_engine import (
+from bayes_tree import (
     validate_node, run_simulation, NodeResult,
 )
 

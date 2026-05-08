@@ -15,7 +15,7 @@ import streamlit as st
 import yaml
 import random
 
-from bayes_engine import run_simulation, validate_node, sim_root, sts
+from bayes_tree import run_simulation, validate_node, sim_root, sts
 
 # ── Page config ──────────────────────────────────────────────────────────────
 
