@@ -599,7 +599,7 @@ class ResultsPanel(QTabWidget):
             delta_item = QTableWidgetItem(f'{a.delta:+.2%}')
             delta_item.setTextAlignment(
                 Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-            if a.flips:
+            if a.flipped:
                 delta_item.setForeground(QColor('#dc2626'))
                 delta_font = QFont()
                 delta_font.setBold(True)

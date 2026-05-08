@@ -220,7 +220,7 @@ if st.button("🎲 Run Simulation", type="primary"):
         for i, a in enumerate(audit.attacks):
             icon = SEVERITY_ICONS.get(a.severity, '⚪')
             label = f"{icon} #{i+1} [{a.severity.upper()}] Δ={a.delta:+.2%}"
-            if a.flips:
+            if a.flipped:
                 label += " ← FLIPS"
             with st.expander(label, expanded=(a.severity in ('critical', 'high'))):
                 st.markdown(f"**Attack:** {a.description}")
