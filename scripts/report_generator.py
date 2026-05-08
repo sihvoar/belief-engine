@@ -122,7 +122,7 @@ def _tree_rows(node, depth=0):
     return rows
 
 
-def generate_report(results, yaml_filename, output_path):
+def generate_report(results, yaml_filename, output_path, audit=None):
     """
     Generate a PDF report from simulation results.
 
@@ -130,6 +130,7 @@ def generate_report(results, yaml_filename, output_path):
         results: dict from bayes_tree.run_simulation()
         yaml_filename: source YAML filename (for title)
         output_path: path to write the PDF
+        audit: optional AuditResult from bayes_tree.adversarial.run_audit()
     """
     doc = SimpleDocTemplate(
         output_path,
@@ -303,6 +304,132 @@ def generate_report(results, yaml_filename, output_path):
             ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
         ]))
         story.append(t4)
+
+    # ── Adversarial audit ────────────────────────────────────────────────
+    if audit is not None:
+        story.append(PageBreak())
+        story.append(Paragraph('Adversarial Robustness Audit',
+                               styles['SectionHead']))
+
+        # Verdict
+        if audit.can_flip:
+            flip_str = (f' (flip prior: {audit.flip_prior:.1%})'
+                        if audit.flip_prior is not None else '')
+            verdict_text = (
+                f'<b>VULNERABLE</b> — conclusion can be flipped by '
+                f'plausible attacks{flip_str}.'
+            )
+            verdict_color = colors.HexColor('#991b1b')
+        else:
+            n_crit = sum(1 for a in audit.attacks
+                         if a.severity in ('critical', 'high'))
+            if n_crit > 0:
+                verdict_text = (
+                    f'<b>CAUTIOUS</b> — {n_crit} high-severity '
+                    f'attacks found, but conclusion holds.'
+                )
+                verdict_color = colors.HexColor('#92400e')
+            else:
+                verdict_text = (
+                    '<b>ROBUST</b> — no high-severity vulnerabilities '
+                    'found.'
+                )
+                verdict_color = colors.HexColor('#166534')
+
+        verdict_style = ParagraphStyle(
+            'Verdict', parent=styles['Normal'],
+            fontSize=11, textColor=verdict_color,
+            spaceBefore=2 * mm, spaceAfter=4 * mm,
+        )
+        story.append(Paragraph(verdict_text, verdict_style))
+
+        story.append(Paragraph(
+            f'Baseline posterior: {audit.original_median:.2%}  |  '
+            f'Attacks found: {len(audit.attacks)}  |  '
+            f'Most vulnerable: {audit.most_vulnerable or "—"}',
+            styles['Normal'],
+        ))
+        story.append(Spacer(1, 4 * mm))
+
+        # Attack table
+        SEVERITY_COLORS = {
+            'critical': colors.HexColor('#dc2626'),
+            'high': colors.HexColor('#ea580c'),
+            'moderate': colors.HexColor('#ca8a04'),
+            'low': colors.HexColor('#6b7280'),
+        }
+
+        adv_data = [['#', 'Severity', 'Attack Description',
+                     'Δ Posterior', 'Plaus.']]
+        for i, a in enumerate(audit.attacks, 1):
+            desc = a.description
+            if len(desc) > 60:
+                desc = desc[:57] + '...'
+            flip_mark = ' ← FLIPS' if a.flipped else ''
+            adv_data.append([
+                str(i),
+                a.severity.upper(),
+                desc,
+                f'{a.delta:+.2%}{flip_mark}',
+                f'{a.plausibility:.1f}',
+            ])
+
+        adv_col_widths = [8 * mm, 18 * mm, 80 * mm, 28 * mm, 14 * mm]
+        t_adv = Table(adv_data, colWidths=adv_col_widths, repeatRows=1)
+
+        # Build style commands
+        adv_style_cmds = [
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e3a5f')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 7),
+            ('ALIGN', (0, 0), (0, -1), 'CENTER'),
+            ('ALIGN', (3, 0), (-1, -1), 'RIGHT'),
+            ('GRID', (0, 0), (-1, -1), 0.3, colors.lightgrey),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1),
+             [colors.white, colors.HexColor('#f0f4f8')]),
+            ('TOPPADDING', (0, 0), (-1, -1), 2),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ]
+        # Color-code severity column
+        for i, a in enumerate(audit.attacks, 1):
+            sev_color = SEVERITY_COLORS.get(a.severity, colors.grey)
+            adv_style_cmds.append(
+                ('TEXTCOLOR', (1, i), (1, i), sev_color))
+            adv_style_cmds.append(
+                ('FONTNAME', (1, i), (1, i), 'Helvetica-Bold'))
+            if a.flipped:
+                adv_style_cmds.append(
+                    ('TEXTCOLOR', (3, i), (3, i),
+                     colors.HexColor('#dc2626')))
+                adv_style_cmds.append(
+                    ('FONTNAME', (3, i), (3, i), 'Helvetica-Bold'))
+
+        t_adv.setStyle(TableStyle(adv_style_cmds))
+        story.append(t_adv)
+        story.append(Spacer(1, 6 * mm))
+
+        # Defense recommendations for top attacks
+        top_attacks = [a for a in audit.attacks
+                       if a.severity in ('critical', 'high') and a.defenses]
+        if top_attacks:
+            story.append(Paragraph('Defense Recommendations',
+                                   styles['SectionHead']))
+            for a in top_attacks[:5]:
+                desc = a.description
+                if len(desc) > 80:
+                    desc = desc[:77] + '...'
+                story.append(Paragraph(
+                    f'<b>[{a.severity.upper()}]</b> {desc}',
+                    styles['Normal'],
+                ))
+                for d in a.defenses:
+                    story.append(Paragraph(
+                        f'&nbsp;&nbsp;&nbsp;&nbsp;• {d}',
+                        styles['Normal'],
+                    ))
+                story.append(Spacer(1, 3 * mm))
 
     # ── Warnings ──────────────────────────────────────────────────────────
     if results['warnings']:

@@ -629,6 +629,7 @@ class MainWindow(QMainWindow):
 
         self._current_file = None
         self._results = None
+        self._audit_result = None
         self._worker = None
         self._adv_worker = None
         self._modified = False
@@ -856,6 +857,7 @@ class MainWindow(QMainWindow):
             return
         self._current_file = None
         self._results = None
+        self._audit_result = None
         self.tree_model.set_root(TreeNode(data={
             'node': 'Is the hypothesis true?',
             'prior': 0.5,
@@ -885,6 +887,7 @@ class MainWindow(QMainWindow):
             self.tree_view.expandAll()
             self._current_file = path
             self._results = None
+            self._audit_result = None
             self.results_panel._show_placeholder()
             self.act_report.setEnabled(False)
             self._set_modified(False)
@@ -1043,6 +1046,7 @@ class MainWindow(QMainWindow):
         self.progress_bar.setVisible(False)
         self.progress_bar.setMaximum(100)
         self.act_adversarial.setEnabled(True)
+        self._audit_result = audit
         self.results_panel.show_adversarial(audit)
 
         n_attacks = len(audit.attacks)
@@ -1082,7 +1086,8 @@ class MainWindow(QMainWindow):
             sys.path.insert(0, _scripts_dir)
             from report_generator import generate_report
             fname = self._current_file or 'Untitled'
-            generate_report(self._results, fname, path)
+            generate_report(self._results, fname, path,
+                           audit=self._audit_result)
             self.statusBar().showMessage(f'Report saved: {os.path.basename(path)}')
             QMessageBox.information(self, 'Report Generated',
                                     f'PDF saved to:\n{path}')
