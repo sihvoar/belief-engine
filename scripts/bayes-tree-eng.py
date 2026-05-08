@@ -21,7 +21,9 @@ YAML structure:
   evidence_type: against | for | neutral
 """
 
-import sys, yaml
+import sys, os, yaml
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
 from bayes_tree import (
     to_lo, from_lo, bayes_upd, post_to_lr, sample_lr,

@@ -112,14 +112,14 @@ print(f"90% CI: [{results['stats']['p5']:.2%} – {results['stats']['p95']:.2%}]
 ### GUI
 
 ```bash
-python bayes_tree_gui.py                        # interactive editor
-python bayes_tree_gui.py examples/shroud.yaml   # open existing analysis
+python scripts/bayes_tree_gui.py                        # interactive editor
+python scripts/bayes_tree_gui.py examples/shroud.yaml   # open existing analysis
 ```
 
 ### Web Demo
 
 ```bash
-streamlit run streamlit_app.py
+streamlit run scripts/streamlit_app.py
 ```
 
 ## YAML Specification

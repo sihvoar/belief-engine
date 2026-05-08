@@ -50,19 +50,20 @@ python -m bayes_tree.cli examples/napoleon.yaml --format json -n 1000
 
 - Keep functions focused and well-documented
 - Add type hints for new code
-- Follow existing patterns in `bayes_engine.py`
+- Follow existing patterns in `bayes_tree/engine.py`
 - No external dependencies for the core engine (only `pyyaml`)
 
 ## Architecture
 
-| File | Purpose |
+| Path | Purpose |
 |------|---------|
-| `bayes_engine.py` | Core math and simulation (standalone, no GUI deps) |
-| `bayes_tree/` | Pip-installable package (re-exports engine) |
+| `bayes_tree/engine.py` | Core math and simulation (single source of truth) |
 | `bayes_tree/cli.py` | CLI with `--format json/csv` and `--prior-sweep` |
-| `bayes-tree-eng.py` | Original terminal UI (colored output, histogram) |
-| `bayes_tree_gui.py` | PyQt6 desktop GUI |
-| `report_generator.py` | PDF report generation |
+| `bayes_tree/__init__.py` | Package exports |
+| `scripts/bayes-tree-eng.py` | Terminal UI (colored output, histogram) |
+| `scripts/bayes_tree_gui.py` | PyQt6 desktop GUI |
+| `scripts/report_generator.py` | PDF report generation |
+| `scripts/streamlit_app.py` | Streamlit web demo |
 | `validation/` | 50-test validation suite |
 
 ## License

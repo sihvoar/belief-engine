@@ -5,8 +5,8 @@ rem Creates a virtual environment and installs all dependencies.
 rem ─────────────────────────────────────────────────────────────
 setlocal enabledelayedexpansion
 
-set "SCRIPT_DIR=%~dp0"
-set "VENV_DIR=%SCRIPT_DIR%.venv"
+set "SCRIPT_DIR=%~dp0.."
+set "VENV_DIR=%SCRIPT_DIR%\.venv"
 
 echo.
 echo   🌳 Bayes Tree — Installer

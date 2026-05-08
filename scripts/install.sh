@@ -5,7 +5,7 @@
 # ─────────────────────────────────────────────────────────────
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 VENV_DIR="$SCRIPT_DIR/.venv"
 MIN_PYTHON="3.9"
 

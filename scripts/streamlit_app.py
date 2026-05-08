@@ -9,7 +9,7 @@ Deploy on HuggingFace Spaces or run locally: streamlit run streamlit_app.py
 import sys
 import os
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
 import streamlit as st
 import yaml
@@ -36,14 +36,16 @@ st.sidebar.markdown(
 n_sim = st.sidebar.slider("Simulations", 1000, 50000, 10000, step=1000)
 
 # Example selector
+_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+
 EXAMPLES = {
     "Custom (paste YAML below)": None,
-    "Napoleon poisoned?": "examples/napoleon.yaml",
-    "God exists?": "examples/god.yaml",
-    "Shroud of Turin authentic?": "examples/shroud.yaml",
-    "Empty tomb is legend?": "examples/empty_grave.yaml",
-    "Hitler murdered?": "examples/hitler.yaml",
-    "Moses historical?": "examples/moses.yaml",
+    "Napoleon poisoned?": os.path.join(_ROOT, "examples/napoleon.yaml"),
+    "God exists?": os.path.join(_ROOT, "examples/god.yaml"),
+    "Shroud of Turin authentic?": os.path.join(_ROOT, "examples/shroud.yaml"),
+    "Empty tomb is legend?": os.path.join(_ROOT, "examples/empty_grave.yaml"),
+    "Hitler murdered?": os.path.join(_ROOT, "examples/hitler.yaml"),
+    "Moses historical?": os.path.join(_ROOT, "examples/moses.yaml"),
 }
 
 selected = st.sidebar.selectbox("Load example", list(EXAMPLES.keys()))

@@ -6,13 +6,13 @@
 #   ./bayes-tree.sh --cli examples/shroud.yaml  # CLI mode
 set -e
 
-DIR="$(cd "$(dirname "$0")" && pwd)"
+DIR="$(cd "$(dirname "$0")/.." && pwd)"
 VENV="$DIR/.venv"
 
 # Auto-install if needed
 if [ ! -d "$VENV" ]; then
     echo "First run — installing dependencies..."
-    "$DIR/install.sh"
+    "$DIR/scripts/install.sh"
     echo
 fi
 
@@ -20,7 +20,7 @@ PY="$VENV/bin/python"
 
 if [ "$1" = "--cli" ]; then
     shift
-    exec "$PY" "$DIR/bayes-tree-eng.py" "$@"
+    exec "$PY" "$DIR/scripts/bayes-tree-eng.py" "$@"
 else
-    exec "$PY" "$DIR/bayes_tree_gui.py" "$@"
+    exec "$PY" "$DIR/scripts/bayes_tree_gui.py" "$@"
 fi

@@ -8,7 +8,10 @@ MIT License — see LICENSE file
 
 import io
 import os
+import sys
 from datetime import datetime
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
@@ -124,7 +127,7 @@ def generate_report(results, yaml_filename, output_path):
     Generate a PDF report from simulation results.
 
     Args:
-        results: dict from bayes_engine.run_simulation()
+        results: dict from bayes_tree.run_simulation()
         yaml_filename: source YAML filename (for title)
         output_path: path to write the PDF
     """
