@@ -46,8 +46,23 @@ Given a binary hypothesis *H* with prior probability *P(H)*, and *n* conditional
 
 ### Hierarchical Structure
 
-- **Root-level children** are combined as independent evidence (log-odds additive).
-- **Sub-children** represent drill-down explanations: the parent's posterior becomes the child's prior, enabling sequential Bayesian chaining within a branch.
+- **Internal nodes** are pure groupers that organise evidence into logical categories. They must not carry likelihood ratios.
+- **Leaf nodes** are the sole carriers of evidence. Each leaf specifies a likelihood ratio interval.
+- **The root prior** is the only prior used. All leaf log-LRs are summed once:
+
+  ```
+  log-odds(posterior) = log-odds(prior) + Σ_leaves log(LRᵢ)
+  ```
+
+- **Subtree contribution** is computed for each internal node (its descendant leaves' combined LR) purely for display — it is not an input to the posterior calculation.
+
+### Semantics
+
+Only leaves contribute evidence to the posterior. Internal nodes exist to provide logical structure and human-readable grouping. The engine validates that no internal node carries an LR; a YAML file with `lr_min` or `lr_max` on a node that also has `children` is rejected with a clear error message.
+
+This design enforces a **single counting rule**: each piece of evidence enters the posterior exactly once, through its leaf node. Duplication that previously arose from internal nodes carrying their own LR alongside children is eliminated.
+
+> **Conditional independence warning.** The log-sum combination assumes that leaf nodes are conditionally independent given *H* and given *¬H*. Sibling leaves that are facets of the same underlying observation (e.g., three laboratories running C14 on samples from the same cloth) violate this assumption. Mitigations: (a) merge such leaves into a single combined leaf; (b) keep only the strongest and drop the rest; or (c) use `correlation_group` and `rho` to model the dependence explicitly via Gaussian copula.
 
 ### Supported Distributions
 
@@ -138,19 +153,22 @@ node: "Is the hypothesis H true?"
 prior: 0.50                    # P(H) — prior probability
 
 children:
-  - node: "Evidence A supports H"
-    lr_min: 1.5                # P(E|H) / P(E|¬H) lower bound
-    lr_max: 4.0                # P(E|H) / P(E|¬H) upper bound
-    lr_dist: log_uniform       # log_uniform | uniform | beta
-    evidence_type: for         # for (LR > 1) | against (LR < 1) | neutral
+  - node: "Evidence group A"   # internal node (grouper, no LR)
+    evidence_type: for         # for display only
 
-    children:                  # sub-evidence (sequential chaining)
+    children:                  # leaf children carry the actual evidence
+      - node: "Supporting observation"
+        lr_min: 1.5
+        lr_max: 4.0
+        lr_dist: log_uniform   # log_uniform | uniform | beta
+        evidence_type: for     # for (LR > 1) | against (LR < 1) | neutral
+
       - node: "Counterpoint weakening A"
         lr_min: 0.3
         lr_max: 0.7
         evidence_type: against
 
-  - node: "C14 date lab 1"
+  - node: "C14 date lab 1"    # leaf node (carries evidence)
     lr_min: 5.0
     lr_max: 20.0
     evidence_type: for
@@ -169,6 +187,8 @@ children:
     lr_max: 0.25
     evidence_type: against
 ```
+
+> **Rule**: A node with `children` must not specify `lr_min`, `lr_max`, or `likelihood_ratio`. Internal nodes carry only `node` (label), `evidence_type` (for display), and `children`.
 
 ### Correlation Groups
 
@@ -234,7 +254,8 @@ The mathematical framework — Bayesian updating, log-odds combination, conditio
 
 ### Assumptions and Limitations
 
-- **Conditional independence**: Root-level branches are assumed independent given *H* by default. Evidence sharing a common flaw can be modeled with `correlation_group` and `rho` parameters, and the adversarial audit can test the impact of unmodeled correlations.
+- **Conditional independence**: Leaf nodes are assumed conditionally independent given *H* and *¬H*. Evidence sharing a common methodological flaw should be either merged into a single leaf, or tagged with `correlation_group` and `rho` for copula-based correlation modeling. The adversarial audit can quantify the impact of unmodeled correlations.
+- **Leaves-only evidence**: Only leaf nodes carry likelihood ratios. Internal nodes are pure groupers. This design prevents double-counting that arises when both a parent node and its children carry LRs.
 - **Analyst calibration**: Results are only as good as the LR estimates. The tool makes reasoning transparent but cannot verify inputs.
 - **Binary hypotheses**: The current framework evaluates *H* vs *¬H*. Multi-hypothesis extensions are planned.
 

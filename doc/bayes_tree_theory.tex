@@ -134,8 +134,10 @@ Equivalently, in odds form:
 \text{odds}(H \mid E_{1:n}) = \text{odds}(H) \prod_{i=1}^{n} \text{LR}_i
 \end{equation}
 
-The tool computes this at the root level, treating each top-level child as an
-independent evidence source by default.
+The tool computes this by collecting all \emph{leaf nodes} from the tree and
+summing their log-LRs against the root prior.  Internal (non-leaf) nodes are
+pure groupers and carry no evidence.  The conditional independence assumption
+applies to leaf nodes given $H$ and given $\neg H$; see the warnings below.
 
 \subsection{Correlated Evidence (Correlation Groups)}
 
@@ -203,22 +205,34 @@ $[\text{lr\_min}, \text{lr\_max}]$:
 \end{description}
 
 %═══════════════════════════════════════════════════════════════════════════════
-\section{Tree Structure and Chaining}
+\section{Tree Structure and Aggregation}
 
-The tree has two distinct roles:
+The tree has two kinds of nodes:
 \begin{itemize}
-\item \textbf{Root level:} Children are combined as independent evidence
-  (log-odds sum). Each child contributes its own LR to the root posterior.
-\item \textbf{Sub-levels:} Children represent drill-down or decomposition of
-  the parent evidence. The child's prior is set to the parent's posterior
-  (chaining), showing how the probability evolves through successive reasoning
-  steps.
+\item \textbf{Leaf nodes} carry evidence: each specifies a likelihood ratio
+  or interval.  Only leaves contribute to the posterior via the log-odds sum.
+\item \textbf{Internal nodes} are pure groupers.  They must not carry
+  \texttt{lr\_min}, \texttt{lr\_max}, or \texttt{likelihood\_ratio}.  The
+  parser rejects any node that has both children and an LR parameter.
 \end{itemize}
 
-Importantly, children of top-level branches are \emph{not} multiplied into the
-root combination. They only serve to explain or decompose a branch's LR. If
-child-level evidence should aggregate to the root, the model must be
-restructured so that the relevant nodes appear at the top level.
+The root prior is the \emph{only} prior.  The posterior is computed as a flat
+traversal over all leaves:
+\begin{equation}
+\text{lo}(\text{posterior}) = \text{lo}(\text{prior}_{\text{root}})
+  + \sum_{\ell \in \text{leaves}} \ln(\text{LR}_\ell)
+\end{equation}
+
+Internal nodes' contributions are computed for display only: the
+``subtree contribution'' of an internal node is the combined LR of its
+descendant leaves, showing how each evidence group influences the overall
+posterior.  These figures are informational and do not feed back into the
+computation.
+
+\paragraph{Leave-one-out ranking.}
+Removing an internal node removes all its descendant leaves from the sum.
+Removing a leaf removes just that leaf.  The resulting change in the baseline
+posterior quantifies each node's importance.
 
 %═══════════════════════════════════════════════════════════════════════════════
 \section{Sensitivity Analysis}
@@ -250,7 +264,10 @@ children:
 
 \subsection{Evidence Node}
 
-Each child node represents one piece of evidence:
+Each child node is either a \textbf{leaf} (carries an LR) or an
+\textbf{internal grouper} (has children but no LR).
+
+\paragraph{Leaf node:}
 
 \begin{lstlisting}[language=yaml]
 - node: "Evidence description"
@@ -271,13 +288,27 @@ Each child node represents one piece of evidence:
   # Optional: correlation with other branches
   correlation_group: c14    # Group tag (branches with same tag are correlated)
   rho: 0.7                  # Pearson correlation coefficient (0 to 1)
-
-  # Optional sub-evidence (drill-down)
-  children:
-    - node: "Sub-evidence"
-      evidence_type: for
-      likelihood_ratio: 1.5
 \end{lstlisting}
+
+\paragraph{Internal node (grouper):}
+
+\begin{lstlisting}[language=yaml]
+- node: "Evidence category"
+  evidence_type: for        # For display only
+  children:                 # Leaf children carry the actual evidence
+    - node: "Sub-evidence A"
+      lr_min: 1.5
+      lr_max: 3.0
+      evidence_type: for
+    - node: "Counter-argument"
+      lr_min: 0.3
+      lr_max: 0.7
+      evidence_type: against
+\end{lstlisting}
+
+\textbf{Rule:} A node with \texttt{children} must not specify
+\texttt{lr\_min}, \texttt{lr\_max}, or \texttt{likelihood\_ratio}.  The
+engine raises a \texttt{ValueError} if this constraint is violated.
 
 \subsection{Evidence Type}
 
@@ -804,18 +835,21 @@ The audit produces a verdict:
 \section{Limitations and Assumptions}
 
 \begin{itemize}
-\item \textbf{Independence assumption.} Top-level branches are assumed
-  conditionally independent given $H$ and $\neg H$ by default.  When
-  branches share a common methodological flaw, use
-  \texttt{correlation\_group} and \texttt{rho} to model the dependence
-  explicitly.  The adversarial correlation attack
-  (Section~\ref{sec:adversarial}) can quantify the impact of any remaining
-  unmodeled correlations.
+\item \textbf{Independence assumption.} Leaf nodes are assumed
+  conditionally independent given $H$ and $\neg H$ by default.  Sibling
+  leaves that are facets of the same underlying observation
+  (e.g.,\ three laboratories running C14 on samples from the same cloth)
+  violate this assumption.  Mitigations: (a) merge such leaves into one;
+  (b) keep only the strongest; or (c) use \texttt{correlation\_group} and
+  \texttt{rho} to model the dependence explicitly.  The adversarial
+  correlation attack (Section~\ref{sec:adversarial}) can quantify the
+  impact of any remaining unmodeled correlations.
 
-\item \textbf{Children do not aggregate to root.} Children are used only for
-  chained drill-down display. If child-level evidence should contribute to
-  the root posterior, the model must be restructured so that the relevant
-  nodes appear at the top level.
+\item \textbf{Leaves-only evidence.} Only leaf nodes carry likelihood ratios;
+  internal nodes are pure groupers.  A YAML file with an LR on a node that
+  also has children is rejected at parse time.  This design eliminates
+  double-counting that arises from evidence appearing both at the parent
+  and child level.
 
 \item \textbf{Log-uniform bias.} The default log-uniform sampling biases
   toward multiplicative scales. Users should choose a distribution that
@@ -839,9 +873,11 @@ The audit produces a verdict:
   clamped to $[-700, 700]$ before exponentiation.
 \item \textbf{Sampling:} The same random draw strategy is applied per
   simulation; users can set simulation counts via the command line.
-\item \textbf{Tree view:} A recursive collection routine computes node-level
-  posteriors by feeding a parent's posterior median as prior into children,
-  producing local medians and credible intervals.
+\item \textbf{Tree view:} A recursive collection routine computes
+  subtree-contribution statistics for internal nodes (their descendant
+  leaves' combined LR and hypothetical posterior) purely for display.
+  The root prior is the only prior used; internal nodes do not have
+  independent posteriors.
 \item \textbf{Effective LR for root:} The root node's LR interval is derived
   from the 5th--95th percentiles of the effective LR distribution across all
   Monte Carlo runs.

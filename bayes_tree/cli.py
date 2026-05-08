@@ -245,7 +245,11 @@ def main():
         return
 
     # Normal simulation
-    results = run_simulation(data, n_sim=args.simulations)
+    try:
+        results = run_simulation(data, n_sim=args.simulations)
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
 
     if args.format == "json":
         print(_format_json(results, data))

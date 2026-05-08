@@ -16,6 +16,7 @@ from typing import Any, Optional
 from bayes_tree.engine import (
     NodeDict, run_simulation, sim_root, sts,
     to_lo, from_lo, bayes_upd, sample_lr, post_to_lr,
+    collect_leaves,
 )
 
 
@@ -39,13 +40,22 @@ class AttackResult:
 
     @property
     def severity(self) -> str:
-        """Human-readable severity label."""
-        d = abs(self.delta)
-        if d > 0.20:
+        """Human-readable severity label using log-odds shift.
+
+        For extreme baselines (near 0 or 1), absolute probability change
+        is tiny. Log-odds shift gives a scale-invariant measure.
+        """
+        orig_lo = math.log(max(self.original_median, 1e-12)
+                           / max(1 - self.original_median, 1e-12))
+        att_lo = math.log(max(self.attacked_median, 1e-12)
+                          / max(1 - self.attacked_median, 1e-12))
+        lo_shift = abs(att_lo - orig_lo)
+
+        if lo_shift > 3.0 or abs(self.delta) > 0.20:
             return "critical"
-        elif d > 0.10:
+        elif lo_shift > 1.5 or abs(self.delta) > 0.10:
             return "high"
-        elif d > 0.05:
+        elif lo_shift > 0.5 or abs(self.delta) > 0.05:
             return "moderate"
         else:
             return "low"
@@ -70,43 +80,56 @@ def _sim_root_correlated(
     rho: float,
 ) -> tuple[float, float]:
     """
-    Like sim_root but introduces correlation between specified branch pairs.
+    Like sim_root but introduces correlation between specified subtree pairs.
 
-    Uses a Gaussian copula: generate correlated normals, transform to
-    uniform, use as quantile inputs for LR sampling.
+    corr_pairs are indices into root's direct children.  All leaves of
+    paired subtrees are correlated via Gaussian copula.
     """
     prior = data.get('prior', 0.5)
     children = data.get('children', [])
-    n = len(children)
+    if not children:
+        return prior, 1.0
+
+    # Map each root child to its leaf indices in the flat leaf list
+    all_leaves: list[NodeDict] = []
+    child_leaf_ranges: list[tuple[int, int]] = []
+    for child in children:
+        start = len(all_leaves)
+        child_leaves = collect_leaves(child)
+        all_leaves.extend(child_leaves)
+        child_leaf_ranges.append((start, start + len(child_leaves)))
+
+    n = len(all_leaves)
     if n == 0:
         return prior, 1.0
 
     # Generate independent standard normals
     z = [random.gauss(0, 1) for _ in range(n)]
 
-    # Inject correlation: for each pair (i, j), mix z values
-    for i, j in corr_pairs:
-        if i < n and j < n:
-            # Cholesky-like mixing: z_j' = rho * z_i + sqrt(1-rho^2) * z_j
-            z[j] = rho * z[i] + math.sqrt(max(0, 1 - rho * rho)) * z[j]
+    # Inject correlation: for each pair of subtrees, mix their leaves
+    for ci, cj in corr_pairs:
+        if ci < len(children) and cj < len(children):
+            si, _ei = child_leaf_ranges[ci]
+            sj, ej = child_leaf_ranges[cj]
+            # Mix all leaves of subtree j with anchor from subtree i
+            anchor_z = z[si]
+            for k in range(sj, ej):
+                z[k] = (rho * anchor_z
+                        + math.sqrt(max(0, 1 - rho * rho)) * z[k])
 
-    # Convert normals to uniform [0,1] via standard normal CDF approximation
+    # Convert normals to uniform [0,1] via standard normal CDF
     def norm_cdf(x: float) -> float:
         return 0.5 * (1 + math.erf(x / math.sqrt(2)))
 
-    uniforms = [norm_cdf(zi) for zi in z]
-
-    # Sample LRs using the correlated uniforms as quantile inputs
     base_lo = to_lo(prior)
-    total_lo = base_lo
-    for idx, child in enumerate(children):
-        u = uniforms[idx]
-        lr = _sample_lr_from_quantile(child, u)
-        branch_post = bayes_upd(prior, lr)
-        total_lo += to_lo(branch_post) - base_lo
+    total_log_lr = 0.0
+    for idx, leaf in enumerate(all_leaves):
+        u = norm_cdf(z[idx])
+        lr = _sample_lr_from_quantile(leaf, u)
+        total_log_lr += math.log(max(lr, 1e-12))
 
-    posterior = from_lo(total_lo)
-    eff_lr = post_to_lr(prior, posterior)
+    posterior = from_lo(base_lo + total_log_lr)
+    eff_lr = math.exp(total_log_lr)
     return posterior, eff_lr
 
 
@@ -207,7 +230,7 @@ class CorrelationAttack(Attack):
                     delta = s['median'] - baseline_median
 
                     # Only report if meaningful impact
-                    if abs(delta) < 0.005:
+                    if not _is_meaningful(baseline_median, s['median']):
                         continue
 
                     results.append(AttackResult(
@@ -249,27 +272,27 @@ class LRCalibrationAttack(Attack):
 
     def generate(self, data: NodeDict, baseline_median: float,
                  n_sim: int = 5000) -> list[AttackResult]:
-        children = data.get('children', [])
+        leaves = collect_leaves(data)
         results = []
 
         shrink_factors = [0.25, 0.50, 0.75]
 
-        for idx, child in enumerate(children):
-            name = child.get('node', f'Branch {idx}')
+        for idx, leaf in enumerate(leaves):
+            name = leaf.get('node', f'Leaf {idx}')
 
-            if 'likelihood_ratio' in child:
-                lr_pt = float(child['likelihood_ratio'])
+            if 'likelihood_ratio' in leaf:
+                lr_pt = float(leaf['likelihood_ratio'])
                 log_lr = math.log(max(lr_pt, 1e-12))
 
                 for sf in shrink_factors:
                     new_lr = math.exp(log_lr * sf)
-                    mod_data = _modify_child(data, idx,
+                    mod_data = _modify_leaf(data, idx,
                                              {'likelihood_ratio': new_lr})
                     posteriors = [sim_root(mod_data)[0]
                                  for _ in range(n_sim)]
                     s = sts(posteriors)
                     delta = s['median'] - baseline_median
-                    if abs(delta) < 0.005:
+                    if not _is_meaningful(baseline_median, s['median']):
                         continue
                     results.append(AttackResult(
                         attack_type=self.attack_type,
@@ -283,7 +306,7 @@ class LRCalibrationAttack(Attack):
                         delta=delta,
                         plausibility=0.0,
                         details={
-                            'branch_idx': idx,
+                            'leaf_idx': idx,
                             'mode': 'shrink_point',
                             'shrink_factor': sf,
                             'original_lr': lr_pt,
@@ -291,8 +314,8 @@ class LRCalibrationAttack(Attack):
                         },
                     ))
             else:
-                lr_min = float(child.get('lr_min', 1.0))
-                lr_max = float(child.get('lr_max', 1.0))
+                lr_min = float(leaf.get('lr_min', 1.0))
+                lr_max = float(leaf.get('lr_max', 1.0))
                 log_min = math.log(max(lr_min, 1e-12))
                 log_max = math.log(max(lr_max, 1e-12))
 
@@ -300,14 +323,14 @@ class LRCalibrationAttack(Attack):
                 for sf in shrink_factors:
                     new_min = math.exp(log_min * sf)
                     new_max = math.exp(log_max * sf)
-                    mod_data = _modify_child(data, idx, {
+                    mod_data = _modify_leaf(data, idx, {
                         'lr_min': new_min, 'lr_max': new_max,
                     })
                     posteriors = [sim_root(mod_data)[0]
                                  for _ in range(n_sim)]
                     s = sts(posteriors)
                     delta = s['median'] - baseline_median
-                    if abs(delta) < 0.005:
+                    if not _is_meaningful(baseline_median, s['median']):
                         continue
                     results.append(AttackResult(
                         attack_type=self.attack_type,
@@ -322,7 +345,7 @@ class LRCalibrationAttack(Attack):
                         delta=delta,
                         plausibility=0.0,
                         details={
-                            'branch_idx': idx,
+                            'leaf_idx': idx,
                             'mode': 'shrink_interval',
                             'shrink_factor': sf,
                             'original_lr_min': lr_min,
@@ -339,14 +362,14 @@ class LRCalibrationAttack(Attack):
                     new_half = log_half * expansion
                     new_min_e = math.exp(log_center - new_half)
                     new_max_e = math.exp(log_center + new_half)
-                    mod_data = _modify_child(data, idx, {
+                    mod_data = _modify_leaf(data, idx, {
                         'lr_min': new_min_e, 'lr_max': new_max_e,
                     })
                     posteriors = [sim_root(mod_data)[0]
                                  for _ in range(n_sim)]
                     s = sts(posteriors)
                     delta = s['median'] - baseline_median
-                    if abs(delta) < 0.005:
+                    if not _is_meaningful(baseline_median, s['median']):
                         continue
                     results.append(AttackResult(
                         attack_type=self.attack_type,
@@ -361,7 +384,7 @@ class LRCalibrationAttack(Attack):
                         delta=delta,
                         plausibility=0.0,
                         details={
-                            'branch_idx': idx,
+                            'leaf_idx': idx,
                             'mode': 'expand',
                             'expansion': expansion,
                             'attacked_lr_min': new_min_e,
@@ -385,7 +408,7 @@ class MisspecificationAttack(Attack):
 
     def generate(self, data: NodeDict, baseline_median: float,
                  n_sim: int = 5000) -> list[AttackResult]:
-        children = data.get('children', [])
+        leaves = collect_leaves(data)
         results = []
 
         alt_dists = [
@@ -396,12 +419,12 @@ class MisspecificationAttack(Attack):
             ('beta', {'lr_alpha': 5, 'lr_beta': 2}),  # right-skewed
         ]
 
-        for idx, child in enumerate(children):
-            if 'likelihood_ratio' in child:
+        for idx, leaf in enumerate(leaves):
+            if 'likelihood_ratio' in leaf:
                 continue  # point LR — no distribution to attack
 
-            name = child.get('node', f'Branch {idx}')
-            current_dist = child.get('lr_dist', 'log_uniform')
+            name = leaf.get('node', f'Leaf {idx}')
+            current_dist = leaf.get('lr_dist', 'log_uniform')
 
             for alt_dist, alt_params in alt_dists:
                 if alt_dist == current_dist and not alt_params:
@@ -409,13 +432,13 @@ class MisspecificationAttack(Attack):
 
                 mods: dict[str, Any] = {'lr_dist': alt_dist}
                 mods.update(alt_params)
-                mod_data = _modify_child(data, idx, mods)
+                mod_data = _modify_leaf(data, idx, mods)
 
                 posteriors = [sim_root(mod_data)[0] for _ in range(n_sim)]
                 s = sts(posteriors)
                 delta = s['median'] - baseline_median
 
-                if abs(delta) < 0.005:
+                if not _is_meaningful(baseline_median, s['median']):
                     continue
 
                 param_str = ""
@@ -434,7 +457,7 @@ class MisspecificationAttack(Attack):
                     delta=delta,
                     plausibility=0.0,
                     details={
-                        'branch_idx': idx,
+                        'leaf_idx': idx,
                         'original_dist': current_dist,
                         'attacked_dist': alt_dist,
                         'attacked_params': alt_params,
@@ -480,7 +503,7 @@ class PriorBiasAttack(Attack):
         # Report the most impactful prior shifts
         for p, med in sweep_data:
             delta = med - baseline_median
-            if abs(delta) < 0.005:
+            if not _is_meaningful(baseline_median, med):
                 continue
 
             direction = "higher" if p > original_prior else "lower"
@@ -544,13 +567,49 @@ class PriorBiasAttack(Attack):
 
 def _modify_child(data: NodeDict, child_idx: int,
                   mods: dict[str, Any]) -> NodeDict:
-    """Return a deep copy of data with modifications to one child."""
+    """Return a deep copy of data with modifications to one direct child."""
     new_data = copy.deepcopy(data)
     child = new_data['children'][child_idx]
     child.update(mods)
     return new_data
 
 
+def _modify_leaf(data: NodeDict, leaf_idx: int,
+                 mods: dict[str, Any]) -> NodeDict:
+    """Return a deep copy of data with modifications to a specific leaf."""
+    new_data = copy.deepcopy(data)
+    leaves = _mutable_leaves(new_data)
+    leaves[leaf_idx].update(mods)
+    return new_data
+
+
+def _mutable_leaves(node: NodeDict) -> list[NodeDict]:
+    """Collect mutable leaf references within an already-copied tree."""
+    children = node.get('children', [])
+    if not children:
+        return [node]
+    result: list[NodeDict] = []
+    for ch in children:
+        result.extend(_mutable_leaves(ch))
+    return result
+
+
 def _short(name: str, max_len: int = 40) -> str:
     """Truncate name for display."""
     return name if len(name) <= max_len else name[:max_len - 1] + "…"
+
+
+def _is_meaningful(baseline: float, attacked: float) -> bool:
+    """Check if delta is meaningful using log-odds difference.
+
+    For extreme baselines (near 0 or 1), absolute delta is tiny even for
+    significant evidence shifts. Use log-odds change instead: a shift of
+    ≥0.2 in log-odds space is meaningful at any baseline.
+    """
+    abs_delta = abs(attacked - baseline)
+    if abs_delta >= 0.005:
+        return True
+    # Log-odds comparison for extreme baselines
+    base_lo = math.log(max(baseline, 1e-12) / max(1 - baseline, 1e-12))
+    att_lo = math.log(max(attacked, 1e-12) / max(1 - attacked, 1e-12))
+    return abs(att_lo - base_lo) >= 0.2

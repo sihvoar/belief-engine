@@ -5,149 +5,128 @@ children:
 
   # ── SUPPORTING EVIDENCE ───────────────────────────────────────────────────
 
-  - node: "Arsenic levels in hair extremely high"
+- node: "Arsenic levels in hair extremely high"
+  evidence_type: for
+  children:
+  - node: "Hair analysis 2001: arsenic 38x normal (Forshufvud/Smith)"
     lr_min: 2.0
-    lr_max: 6.0
-    lr_dist: log_uniform
+    lr_max: 5.0
     evidence_type: for
-    children:
-      - node: "Hair analysis 2001: arsenic 38x normal (Forshufvud/Smith)"
-        lr_min: 2.0
-        lr_max: 5.0
-        evidence_type: for
-      - node: "High levels in multiple hair samples from different periods"
-        lr_min: 1.5
-        lr_max: 4.0
-        evidence_type: for
-      - node: "Levels fluctuate — suggests repeated exposure"
-        lr_min: 1.5
-        lr_max: 3.5
-        evidence_type: for
-      - node: "Scheele's Green wallpaper at Longwood contained arsenic"
-        lr_min: 0.2
-        lr_max: 0.6
-        evidence_type: against
-
-  - node: "Political motive and opportunity"
+  - node: "High levels in multiple hair samples from different periods"
     lr_min: 1.5
     lr_max: 4.0
-    lr_dist: log_uniform
     evidence_type: for
-    children:
-      - node: "Britain feared Napoleon's return — clear motive"
-        lr_min: 1.5
-        lr_max: 3.5
-        evidence_type: for
-      - node: "General Hudson Lowe strictly restricted access to Napoleon"
-        lr_min: 1.2
-        lr_max: 2.5
-        evidence_type: for
-      - node: "Napoleon himself suspected poisoning on his deathbed"
-        lr_min: 1.2
-        lr_max: 2.5
-        evidence_type: for
-      - node: "Napoleon also had personal enemies in his inner circle"
-        lr_min: 1.2
-        lr_max: 2.5
-        evidence_type: for
+  - node: "Levels fluctuate — suggests repeated exposure"
+    lr_min: 1.5
+    lr_max: 3.5
+    evidence_type: for
+  - node: "Scheele's Green wallpaper at Longwood contained arsenic"
+    lr_min: 0.2
+    lr_max: 0.6
+    evidence_type: against
 
-  - node: "Symptoms consistent with arsenic poisoning"
-    lr_min: 1.2
-    lr_max: 3.0
-    lr_dist: log_uniform
+- node: "Political motive and opportunity"
+  evidence_type: for
+  children:
+  - node: "Britain feared Napoleon's return — clear motive"
+    lr_min: 1.5
+    lr_max: 3.5
     evidence_type: for
-    children:
-      - node: "Nausea, vomiting, weight loss — typical arsenic symptoms"
-        lr_min: 1.2
-        lr_max: 2.5
-        evidence_type: for
-      - node: "Same symptoms also fit stomach cancer"
-        lr_min: 0.3
-        lr_max: 0.7
-        evidence_type: against
-      - node: "Pallor and weakness reported by doctors is consistent"
-        lr_min: 1.1
-        lr_max: 2.0
-        evidence_type: for
+  - node: "General Hudson Lowe strictly restricted access to Napoleon"
+    lr_min: 1.2
+    lr_max: 2.5
+    evidence_type: for
+  - node: "Napoleon himself suspected poisoning on his deathbed"
+    lr_min: 1.2
+    lr_max: 2.5
+    evidence_type: for
+  - node: "Napoleon also had personal enemies in his inner circle"
+    lr_min: 1.2
+    lr_max: 2.5
+    evidence_type: for
+
+- node: "Symptoms consistent with arsenic poisoning"
+  evidence_type: for
+  children:
+  - node: "Nausea, vomiting, weight loss — typical arsenic symptoms"
+    lr_min: 1.2
+    lr_max: 2.5
+    evidence_type: for
+  - node: "Same symptoms also fit stomach cancer"
+    lr_min: 0.3
+    lr_max: 0.7
+    evidence_type: against
+  - node: "Pallor and weakness reported by doctors is consistent"
+    lr_min: 1.1
+    lr_max: 2.0
+    evidence_type: for
 
   # ── COUNTEREVIDENCE ────────────────────────────────────────────────────────
 
-  - node: "Scheele's Green wallpaper explains arsenic without poisoning"
+- node: "Scheele's Green wallpaper explains arsenic without poisoning"
+  evidence_type: against
+  children:
+  - node: "Longwood's damp walls — mold converts arsenic to gas"
     lr_min: 0.10
+    lr_max: 0.35
+    evidence_type: against
+  - node: "Arsenic-containing wallpaper was a common exposure source in the era"
+    lr_min: 0.15
     lr_max: 0.40
-    lr_dist: log_uniform
     evidence_type: against
-    children:
-      - node: "Longwood's damp walls — mold converts arsenic to gas"
-        lr_min: 0.10
-        lr_max: 0.35
-        evidence_type: against
-      - node: "Arsenic-containing wallpaper was a common exposure source in the era"
-        lr_min: 0.15
-        lr_max: 0.40
-        evidence_type: against
-      - node: "Others living at Longwood also developed symptoms"
-        lr_min: 0.20
-        lr_max: 0.50
-        evidence_type: against
-      - node: "Wallpaper arsenic levels cannot explain all findings however"
-        lr_min: 1.5
-        lr_max: 3.0
-        evidence_type: for
-
-  - node: "Autopsy showed stomach cancer"
-    lr_min: 0.15
-    lr_max: 0.45
-    lr_dist: log_uniform
-    evidence_type: against
-    children:
-      - node: "Five doctors confirmed stomach cancer at autopsy in 1821"
-        lr_min: 0.15
-        lr_max: 0.40
-        evidence_type: against
-      - node: "Stomach cancer and arsenic exposure can co-occur"
-        lr_min: 1.2
-        lr_max: 2.5
-        evidence_type: for
-      - node: "Autopsies of the era were imprecise"
-        lr_min: 1.2
-        lr_max: 2.5
-        evidence_type: for
-
-  - node: "Deliberate poisoning requires an agent and a plan"
+  - node: "Others living at Longwood also developed symptoms"
     lr_min: 0.20
-    lr_max: 0.55
-    lr_dist: log_uniform
+    lr_max: 0.50
     evidence_type: against
-    children:
-      - node: "No direct evidence anyone administered arsenic deliberately"
-        lr_min: 0.20
-        lr_max: 0.50
-        evidence_type: against
-      - node: "Arsenic was also used as medicine in the era"
-        lr_min: 0.25
-        lr_max: 0.55
-        evidence_type: against
-      - node: "A conspiracy would require multiple people's silence"
-        lr_min: 0.25
-        lr_max: 0.55
-        evidence_type: against
+  - node: "Wallpaper arsenic levels cannot explain all findings however"
+    lr_min: 1.5
+    lr_max: 3.0
+    evidence_type: for
 
-  - node: "New DNA and isotope analyses 2021 support natural death"
+- node: "Autopsy showed stomach cancer"
+  evidence_type: against
+  children:
+  - node: "Five doctors confirmed stomach cancer at autopsy in 1821"
     lr_min: 0.15
-    lr_max: 0.45
-    lr_dist: log_uniform
+    lr_max: 0.40
     evidence_type: against
-    children:
-      - node: "Isotope analysis: arsenic from environment not deliberate dose"
-        lr_min: 0.15
-        lr_max: 0.40
-        evidence_type: against
-      - node: "2021 analysis: arsenic levels normal by period standards"
-        lr_min: 0.20
-        lr_max: 0.50
-        evidence_type: against
-      - node: "Older analyses (Forshufvud) methodologically disputed"
-        lr_min: 0.20
-        lr_max: 0.50
-        evidence_type: against
+  - node: "Stomach cancer and arsenic exposure can co-occur"
+    lr_min: 1.2
+    lr_max: 2.5
+    evidence_type: for
+  - node: "Autopsies of the era were imprecise"
+    lr_min: 1.2
+    lr_max: 2.5
+    evidence_type: for
+
+- node: "Deliberate poisoning requires an agent and a plan"
+  evidence_type: against
+  children:
+  - node: "No direct evidence anyone administered arsenic deliberately"
+    lr_min: 0.20
+    lr_max: 0.50
+    evidence_type: against
+  - node: "Arsenic was also used as medicine in the era"
+    lr_min: 0.25
+    lr_max: 0.55
+    evidence_type: against
+  - node: "A conspiracy would require multiple people's silence"
+    lr_min: 0.25
+    lr_max: 0.55
+    evidence_type: against
+
+- node: "New DNA and isotope analyses 2021 support natural death"
+  evidence_type: against
+  children:
+  - node: "Isotope analysis: arsenic from environment not deliberate dose"
+    lr_min: 0.15
+    lr_max: 0.40
+    evidence_type: against
+  - node: "2021 analysis: arsenic levels normal by period standards"
+    lr_min: 0.20
+    lr_max: 0.50
+    evidence_type: against
+  - node: "Older analyses (Forshufvud) methodologically disputed"
+    lr_min: 0.20
+    lr_max: 0.50
+    evidence_type: against

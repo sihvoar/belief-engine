@@ -7,11 +7,11 @@ MIT License — see LICENSE file
 Usage: python bayes-tree-eng.py [file.yaml] [simulations]
 
 Architecture:
-  - Root combines direct children as independent evidence (log-odds sum)
-  - Root lr_min/lr_max is computed automatically from children's distribution
-  - Each branch uses ONLY its own LR in the root combination
-  - Children represent drill-down/explanation, not additions to the combination
-  - Tree view shows chaining: parent's posterior -> child's posterior
+  - Only leaf nodes carry evidence (LR intervals)
+  - Internal nodes are pure groupers — no LR allowed
+  - All leaf log-LRs are summed once and applied to the root prior
+  - Internal nodes display their subtree's aggregated contribution
+  - The root prior is the only prior used
 
 YAML structure:
   lr_min: 0.01        # uncertainty interval (recommended)
@@ -27,7 +27,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'
 
 from bayes_tree import (
     to_lo, from_lo, bayes_upd, post_to_lr, sample_lr,
-    validate_node, sim_root, pct, sts, collect, NodeResult,
+    validate_node, collect_leaves, sim_root, pct, sts, collect, NodeResult,
 )
 
 class C:
@@ -85,14 +85,15 @@ def print_tree(n, prefix="", is_last=True, is_root=True):
         print()
     else:
         if n.lr_derived:
-            lr_s = C.CYAN+f"LR=[{n.lr_min:.4f}–{n.lr_max:.4f}] (derived)"+C.RESET
+            lr_s = C.CYAN+f"LR=[{n.lr_min:.4f}–{n.lr_max:.4f}] (subtree contribution)"+C.RESET
         elif n.lr_pt is not None:
             lr_s = C.GRAY+f"LR={n.lr_pt:.2f}"+C.RESET
         else:
             lr_s = C.GRAY+f"LR=[{n.lr_min:.2f}–{n.lr_max:.2f}]"+C.RESET
         print(f"{prefix}{con}{C.BOLD}{n.name}{C.RESET} {es(n.etype)} {lr_s}")
+        label = "subtree" if n.lr_derived else "prior"
         print(f"{prefix}{cpfx}  {n.prior:.2%} → {col}{n.med:.2%}{C.RESET} "
-              f"{C.GRAY}[{n.p5:.2%}–{n.p95:.2%}]{C.RESET}")
+              f"{C.GRAY}[{n.p5:.2%}–{n.p95:.2%}] ({label}){C.RESET}")
 
     for i,child in enumerate(n.children):
         print_tree(child, prefix+cpfx, i==len(n.children)-1, False)
@@ -114,7 +115,11 @@ def main():
     print("─"*55)
 
     # 0. Validation
-    warnings = validate_node(data)
+    try:
+        warnings = validate_node(data)
+    except ValueError as e:
+        print(f"\n{C.RED}{C.BOLD}ERROR: {e}{C.RESET}")
+        sys.exit(1)
     if warnings:
         print()
         print(C.YELLOW+C.BOLD+"WARNINGS — evidence_type vs LR conflict:"+C.RESET)
@@ -146,7 +151,7 @@ def main():
     # 2. Tree — root gets derived LR
     print()
     print("─"*55)
-    print(C.BOLD+"TREE  (root LR computed from children's distribution)"+C.RESET)
+    print(C.BOLD+"TREE  (leaves carry evidence; internal nodes show subtree contribution)"+C.RESET)
     print("─"*55)
     print()
     prior   = data.get('prior', 0.5)

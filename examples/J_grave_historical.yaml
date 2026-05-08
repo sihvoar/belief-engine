@@ -5,145 +5,124 @@ children:
 
   # ── SUPPORTING EVIDENCE ───────────────────────────────────────────────────
 
-  - node: "Jesus's death is historically very probable"
-    lr_min: 3.0
-    lr_max: 8.0
-    lr_dist: log_uniform
+- node: "Jesus's death is historically very probable"
+  evidence_type: for
+  children:
+  - node: "Tacitus mentions crucifixion under Pontius Pilate"
+    lr_min: 2.0
+    lr_max: 5.0
     evidence_type: for
-    children:
-      - node: "Tacitus mentions crucifixion under Pontius Pilate"
-        lr_min: 2.0
-        lr_max: 5.0
-        evidence_type: for
-      - node: "Josephus mentions Jesus's death"
-        lr_min: 1.5
-        lr_max: 4.0
-        evidence_type: for
-      - node: "Crucifixion was a routine Roman practice for rebels"
-        lr_min: 2.0
-        lr_max: 4.0
-        evidence_type: for
-      - node: "Death on the cross is an embarrassing fact — hard to invent for a messiah"
-        lr_min: 2.0
-        lr_max: 5.0
-        evidence_type: for
-
-  - node: "Early Christian movement arose in Jerusalem — verifiable"
+  - node: "Josephus mentions Jesus's death"
     lr_min: 1.5
     lr_max: 4.0
-    lr_dist: log_uniform
     evidence_type: for
-    children:
-      - node: "Movement began in the same city a few weeks after the death"
-        lr_min: 1.5
-        lr_max: 4.0
-        evidence_type: for
-      - node: "Opponents could have shown the body and extinguished the movement"
-        lr_min: 1.5
-        lr_max: 3.5
-        evidence_type: for
-      - node: "Opponents explained the empty tomb with theft tradition — did not deny it"
-        lr_min: 1.2
-        lr_max: 2.5
-        evidence_type: for
-      - node: "Theft tradition is only in Matthew — not an independent source"
-        lr_min: 0.5
-        lr_max: 1.2
-        evidence_type: against
+  - node: "Crucifixion was a routine Roman practice for rebels"
+    lr_min: 2.0
+    lr_max: 4.0
+    evidence_type: for
+  - node: "Death on the cross is an embarrassing fact — hard to invent for a messiah"
+    lr_min: 2.0
+    lr_max: 5.0
+    evidence_type: for
 
-  - node: "Paul's early letters imply a physical resurrection"
-    lr_min: 1.2
-    lr_max: 3.0
-    lr_dist: log_uniform
+- node: "Early Christian movement arose in Jerusalem — verifiable"
+  evidence_type: for
+  children:
+  - node: "Movement began in the same city a few weeks after the death"
+    lr_min: 1.5
+    lr_max: 4.0
     evidence_type: for
-    children:
-      - node: "1 Cor. 15 — Paul learned the tradition directly from Peter and James"
-        lr_min: 1.5
-        lr_max: 3.5
-        evidence_type: for
-      - node: "Tradition can be dated to 3–5 years after the crucifixion"
-        lr_min: 1.5
-        lr_max: 3.5
-        evidence_type: for
-      - node: "Paul does not explicitly mention the empty tomb"
-        lr_min: 0.3
-        lr_max: 0.8
-        evidence_type: against
+  - node: "Opponents could have shown the body and extinguished the movement"
+    lr_min: 1.5
+    lr_max: 3.5
+    evidence_type: for
+  - node: "Opponents explained the empty tomb with theft tradition — did not deny it"
+    lr_min: 1.2
+    lr_max: 2.5
+    evidence_type: for
+  - node: "Theft tradition is only in Matthew — not an independent source"
+    lr_min: 0.5
+    lr_max: 1.2
+    evidence_type: against
+
+- node: "Paul's early letters imply a physical resurrection"
+  evidence_type: for
+  children:
+  - node: "1 Cor. 15 — Paul learned the tradition directly from Peter and James"
+    lr_min: 1.5
+    lr_max: 3.5
+    evidence_type: for
+  - node: "Tradition can be dated to 3–5 years after the crucifixion"
+    lr_min: 1.5
+    lr_max: 3.5
+    evidence_type: for
+  - node: "Paul does not explicitly mention the empty tomb"
+    lr_min: 0.3
+    lr_max: 0.8
+    evidence_type: against
 
   # ── COUNTEREVIDENCE ────────────────────────────────────────────────────────
 
-  - node: "Romans generally did not release bodies of the crucified"
+- node: "Romans generally did not release bodies of the crucified"
+  evidence_type: against
+  children:
+  - node: "Historical practice: body left on cross or thrown into a pit"
     lr_min: 0.10
-    lr_max: 0.40
-    lr_dist: log_uniform
+    lr_max: 0.35
     evidence_type: against
-    children:
-      - node: "Historical practice: body left on cross or thrown into a pit"
-        lr_min: 0.10
-        lr_max: 0.35
-        evidence_type: against
-      - node: "Crossan: Jesus was probably buried in a common grave without a marker"
-        lr_min: 0.15
-        lr_max: 0.40
-        evidence_type: against
-      - node: "Individual exceptions are known — not an absolute rule"
-        lr_min: 1.5
-        lr_max: 3.0
-        evidence_type: for
-
-  - node: "Joseph of Arimathea is probably a fictional character"
+  - node: "Crossan: Jesus was probably buried in a common grave without a marker"
     lr_min: 0.15
-    lr_max: 0.45
-    lr_dist: log_uniform
+    lr_max: 0.40
     evidence_type: against
-    children:
-      - node: "Unknown person — no mention in other sources"
-        lr_min: 0.20
-        lr_max: 0.50
-        evidence_type: against
-      - node: "A council member burying a political prisoner — implausible"
-        lr_min: 0.20
-        lr_max: 0.50
-        evidence_type: against
-      - node: "Name symbolically meaningful in Hebrew tradition"
-        lr_min: 0.30
-        lr_max: 0.70
-        evidence_type: against
+  - node: "Individual exceptions are known — not an absolute rule"
+    lr_min: 1.5
+    lr_max: 3.0
+    evidence_type: for
 
-  - node: "The empty tomb appears in literature only 40 years later"
+- node: "Joseph of Arimathea is probably a fictional character"
+  evidence_type: against
+  children:
+  - node: "Unknown person — no mention in other sources"
     lr_min: 0.20
-    lr_max: 0.55
-    lr_dist: log_uniform
+    lr_max: 0.50
     evidence_type: against
-    children:
-      - node: "Mark ~70 CE is the oldest source — Paul does not mention it"
-        lr_min: 0.20
-        lr_max: 0.50
-        evidence_type: against
-      - node: "40 years is sufficient time for legend to develop"
-        lr_min: 0.30
-        lr_max: 0.70
-        evidence_type: against
-      - node: "40 years is short compared to other ancient legends"
-        lr_min: 1.2
-        lr_max: 2.5
-        evidence_type: for
+  - node: "A council member burying a political prisoner — implausible"
+    lr_min: 0.20
+    lr_max: 0.50
+    evidence_type: against
+  - node: "Name symbolically meaningful in Hebrew tradition"
+    lr_min: 0.30
+    lr_max: 0.70
+    evidence_type: against
 
-  - node: "Theological pressure to develop a physical resurrection narrative"
+- node: "The empty tomb appears in literature only 40 years later"
+  evidence_type: against
+  children:
+  - node: "Mark ~70 CE is the oldest source — Paul does not mention it"
     lr_min: 0.20
-    lr_max: 0.55
-    lr_dist: log_uniform
+    lr_max: 0.50
     evidence_type: against
-    children:
-      - node: "Competition with other resurrection accounts required concreteness"
-        lr_min: 0.25
-        lr_max: 0.55
-        evidence_type: against
-      - node: "Guard story is clearly an apologetic addition"
-        lr_min: 0.25
-        lr_max: 0.55
-        evidence_type: against
-      - node: "Theological need does not mean the account was invented"
-        lr_min: 1.2
-        lr_max: 2.5
-        evidence_type: for
+  - node: "40 years is sufficient time for legend to develop"
+    lr_min: 0.30
+    lr_max: 0.70
+    evidence_type: against
+  - node: "40 years is short compared to other ancient legends"
+    lr_min: 1.2
+    lr_max: 2.5
+    evidence_type: for
+
+- node: "Theological pressure to develop a physical resurrection narrative"
+  evidence_type: against
+  children:
+  - node: "Competition with other resurrection accounts required concreteness"
+    lr_min: 0.25
+    lr_max: 0.55
+    evidence_type: against
+  - node: "Guard story is clearly an apologetic addition"
+    lr_min: 0.25
+    lr_max: 0.55
+    evidence_type: against
+  - node: "Theological need does not mean the account was invented"
+    lr_min: 1.2
+    lr_max: 2.5
+    evidence_type: for

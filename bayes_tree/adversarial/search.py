@@ -116,31 +116,35 @@ def greedy_search(
 
 def _apply_attack(data: NodeDict, attack: AttackResult) -> NodeDict:
     """Apply an attack's modifications to a tree, returning modified copy."""
+    from bayes_tree.adversarial.attacks import _mutable_leaves
     new_data = copy.deepcopy(data)
     details = attack.details
 
     if attack.attack_type == "lr_calibration":
-        idx = details.get('branch_idx', 0)
-        mode = details.get('mode', '')
-        if mode == 'shrink_point':
-            new_data['children'][idx]['likelihood_ratio'] = details['attacked_lr']
-        elif mode == 'shrink_interval':
-            new_data['children'][idx]['lr_min'] = details['attacked_lr_min']
-            new_data['children'][idx]['lr_max'] = details['attacked_lr_max']
-        elif mode == 'expand':
-            new_data['children'][idx]['lr_min'] = details['attacked_lr_min']
-            new_data['children'][idx]['lr_max'] = details['attacked_lr_max']
+        idx = details.get('leaf_idx', details.get('branch_idx', 0))
+        leaves = _mutable_leaves(new_data)
+        if idx < len(leaves):
+            mode = details.get('mode', '')
+            if mode == 'shrink_point':
+                leaves[idx]['likelihood_ratio'] = details['attacked_lr']
+            elif mode == 'shrink_interval':
+                leaves[idx]['lr_min'] = details['attacked_lr_min']
+                leaves[idx]['lr_max'] = details['attacked_lr_max']
+            elif mode == 'expand':
+                leaves[idx]['lr_min'] = details['attacked_lr_min']
+                leaves[idx]['lr_max'] = details['attacked_lr_max']
 
     elif attack.attack_type == "misspecification":
-        idx = details.get('branch_idx', 0)
-        new_data['children'][idx]['lr_dist'] = details['attacked_dist']
-        for k, v in details.get('attacked_params', {}).items():
-            new_data['children'][idx][k] = v
+        idx = details.get('leaf_idx', details.get('branch_idx', 0))
+        leaves = _mutable_leaves(new_data)
+        if idx < len(leaves):
+            leaves[idx]['lr_dist'] = details['attacked_dist']
+            for k, v in details.get('attacked_params', {}).items():
+                leaves[idx][k] = v
 
     elif attack.attack_type == "prior_bias":
         new_data['prior'] = details.get('attacked_prior', data.get('prior', 0.5))
 
     # correlation attacks don't modify the tree — they change the sim process
-    # so we skip them here (they're handled separately in the auditor)
 
     return new_data

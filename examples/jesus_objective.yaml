@@ -17,175 +17,148 @@ children:
 
   # ── EVIDENCE FOR HISTORICITY ──────────────────────────────────────────────
 
-  - node: "Paul's letters — early and potentially eyewitness-adjacent"
-    lr_min: 1.5
-    lr_max: 4.0
-    lr_dist: log_uniform
-    evidence_type: for
-    children:
-      - node: "Paul met James 'the brother of the Lord' (Gal 1:19)"
-        lr_min: 1.0
-        lr_max: 3.0
-        evidence_type: for
-      - node: "'Brother of the Lord' may be a community title not blood relation"
-        lr_min: 0.4
-        lr_max: 0.9
-        evidence_type: against
-      - node: "Paul claims to have received tradition from Peter (Gal 1:18)"
-        lr_min: 1.0
-        lr_max: 2.5
-        evidence_type: for
-      - node: "Paul never describes Jesus as an earthly contemporary he missed"
-        lr_min: 0.4
-        lr_max: 0.9
-        evidence_type: against
-
-  - node: "Crucifixion under Pontius Pilate — embarrassing and specific"
-    lr_min: 1.5
-    lr_max: 4.0
-    lr_dist: log_uniform
-    evidence_type: for
-    children:
-      - node: "Death under a specific named Roman governor is concretely falsifiable"
-        lr_min: 1.5
-        lr_max: 4.0
-        evidence_type: for
-      - node: "Carrier: celestial crucifixion in sub-lunar realm explains specificity"
-        lr_min: 0.3
-        lr_max: 0.8
-        evidence_type: against
-      - node: "Tacitus confirms execution under Pilate independently"
-        lr_min: 1.5
-        lr_max: 3.5
-        evidence_type: for
-      - node: "Tacitus may depend on Christian sources not independent records"
-        lr_min: 0.4
-        lr_max: 0.9
-        evidence_type: against
-
-  - node: "James, Peter, John — named leaders with apparent historical continuity"
-    lr_min: 1.2
+- node: "Paul's letters — early and potentially eyewitness-adjacent"
+  evidence_type: for
+  children:
+  - node: "Paul met James 'the brother of the Lord' (Gal 1:19)"
+    lr_min: 1.0
     lr_max: 3.0
-    lr_dist: log_uniform
     evidence_type: for
-    children:
-      - node: "Paul interacts with named figures who claim association with Jesus"
-        lr_min: 1.2
-        lr_max: 2.5
-        evidence_type: for
-      - node: "Community figures can exist without a historical founder"
-        lr_min: 0.4
-        lr_max: 0.9
-        evidence_type: against
+  - node: "'Brother of the Lord' may be a community title not blood relation"
+    lr_min: 0.4
+    lr_max: 0.9
+    evidence_type: against
+  - node: "Paul claims to have received tradition from Peter (Gal 1:18)"
+    lr_min: 1.0
+    lr_max: 2.5
+    evidence_type: for
+  - node: "Paul never describes Jesus as an earthly contemporary he missed"
+    lr_min: 0.4
+    lr_max: 0.9
+    evidence_type: against
 
-  - node: "Multiple independent attestation across source strata"
+- node: "Crucifixion under Pontius Pilate — embarrassing and specific"
+  evidence_type: for
+  children:
+  - node: "Death under a specific named Roman governor is concretely falsifiable"
+    lr_min: 1.5
+    lr_max: 4.0
+    evidence_type: for
+  - node: "Carrier: celestial crucifixion in sub-lunar realm explains specificity"
+    lr_min: 0.3
+    lr_max: 0.8
+    evidence_type: against
+  - node: "Tacitus confirms execution under Pilate independently"
+    lr_min: 1.5
+    lr_max: 3.5
+    evidence_type: for
+  - node: "Tacitus may depend on Christian sources not independent records"
+    lr_min: 0.4
+    lr_max: 0.9
+    evidence_type: against
+
+- node: "James, Peter, John — named leaders with apparent historical continuity"
+  evidence_type: for
+  children:
+  - node: "Paul interacts with named figures who claim association with Jesus"
     lr_min: 1.2
     lr_max: 2.5
-    lr_dist: log_uniform
     evidence_type: for
-    children:
-      - node: "Mark, Q (hypothetical), Paul, John — different traditions"
-        lr_min: 1.2
-        lr_max: 2.5
-        evidence_type: for
-      - node: "Source independence is disputed — all may derive from common myth"
-        lr_min: 0.4
-        lr_max: 0.8
-        evidence_type: against
+  - node: "Community figures can exist without a historical founder"
+    lr_min: 0.4
+    lr_max: 0.9
+    evidence_type: against
+
+- node: "Multiple independent attestation across source strata"
+  evidence_type: for
+  children:
+  - node: "Mark, Q (hypothetical), Paul, John — different traditions"
+    lr_min: 1.2
+    lr_max: 2.5
+    evidence_type: for
+  - node: "Source independence is disputed — all may derive from common myth"
+    lr_min: 0.4
+    lr_max: 0.8
+    evidence_type: against
 
   # ── EVIDENCE AGAINST HISTORICITY (for mythicism) ──────────────────────────
 
-  - node: "Rank-Raglan hero pattern — Jesus scores very high"
-    lr_min: 0.35
-    lr_max: 0.75
-    lr_dist: log_uniform
-    evidence_type: against
-    children:
-      - node: "Jesus scores 20/22 on Rank-Raglan heroic biography scale"
-        lr_min: 0.20
-        lr_max: 0.50
-        evidence_type: against
-      - node: "All figures with scores this high are mythical in Carrier's dataset"
-        lr_min: 0.20
-        lr_max: 0.50
-        evidence_type: against
-      - node: "Reference class methodology is disputed — dataset is tiny (~20)"
-        lr_min: 1.5
-        lr_max: 3.5
-        evidence_type: for
-      - node: "Historical figures can acquire mythic biographies post-mortem"
-        lr_min: 1.5
-        lr_max: 3.0
-        evidence_type: for
-
-  - node: "No contemporary non-Christian sources mention Jesus during his life"
+- node: "Rank-Raglan hero pattern — Jesus scores very high"
+  evidence_type: against
+  children:
+  - node: "Jesus scores 20/22 on Rank-Raglan heroic biography scale"
     lr_min: 0.20
-    lr_max: 0.55
-    lr_dist: log_uniform
+    lr_max: 0.50
     evidence_type: against
-    children:
-      - node: "Philo of Alexandria writes extensively on Jewish matters — no Jesus"
-        lr_min: 0.25
-        lr_max: 0.55
-        evidence_type: against
-      - node: "Roman administrative records contain no trace of Jesus"
-        lr_min: 0.25
-        lr_max: 0.55
-        evidence_type: against
-      - node: "Most 1st-century Galilean preachers left no contemporary record"
-        lr_min: 1.5
-        lr_max: 3.5
-        evidence_type: for
+  - node: "All figures with scores this high are mythical in Carrier's dataset"
+    lr_min: 0.20
+    lr_max: 0.50
+    evidence_type: against
+  - node: "Reference class methodology is disputed — dataset is tiny (~20)"
+    lr_min: 1.5
+    lr_max: 3.5
+    evidence_type: for
+  - node: "Historical figures can acquire mythic biographies post-mortem"
+    lr_min: 1.5
+    lr_max: 3.0
+    evidence_type: for
 
-  - node: "Paul's epistles resemble celestial theology more than biography"
+- node: "No contemporary non-Christian sources mention Jesus during his life"
+  evidence_type: against
+  children:
+  - node: "Philo of Alexandria writes extensively on Jewish matters — no Jesus"
     lr_min: 0.25
+    lr_max: 0.55
+    evidence_type: against
+  - node: "Roman administrative records contain no trace of Jesus"
+    lr_min: 0.25
+    lr_max: 0.55
+    evidence_type: against
+  - node: "Most 1st-century Galilean preachers left no contemporary record"
+    lr_min: 1.5
+    lr_max: 3.5
+    evidence_type: for
+
+- node: "Paul's epistles resemble celestial theology more than biography"
+  evidence_type: against
+  children:
+  - node: "Paul shows no interest in Jesus's earthly teachings or deeds"
+    lr_min: 0.25
+    lr_max: 0.55
+    evidence_type: against
+  - node: "Paul receives gospel by revelation not from human witnesses (Gal 1:12)"
+    lr_min: 0.25
+    lr_max: 0.55
+    evidence_type: against
+  - node: "Paul does quote Jesus's words and knows of his earthly family"
+    lr_min: 1.5
+    lr_max: 3.5
+    evidence_type: for
+
+- node: "The Gospels are heavily theological and show legendary development"
+  evidence_type: against
+  children:
+  - node: "Gospels written 40-70 years after events — ample time for myth"
+    lr_min: 0.30
     lr_max: 0.60
-    lr_dist: log_uniform
     evidence_type: against
-    children:
-      - node: "Paul shows no interest in Jesus's earthly teachings or deeds"
-        lr_min: 0.25
-        lr_max: 0.55
-        evidence_type: against
-      - node: "Paul receives gospel by revelation not from human witnesses (Gal 1:12)"
-        lr_min: 0.25
-        lr_max: 0.55
-        evidence_type: against
-      - node: "Paul does quote Jesus's words and knows of his earthly family"
-        lr_min: 1.5
-        lr_max: 3.5
-        evidence_type: for
+  - node: "Infancy narratives, resurrection, miracles show theological elaboration"
+    lr_min: 0.30
+    lr_max: 0.60
+    evidence_type: against
+  - node: "Legendary elaboration is compatible with a historical core"
+    lr_min: 1.5
+    lr_max: 3.5
+    evidence_type: for
 
-  - node: "The Gospels are heavily theological and show legendary development"
-    lr_min: 0.25
-    lr_max: 0.55
-    lr_dist: log_uniform
+- node: "Dying-and-rising god parallels in contemporary mystery religions"
+  evidence_type: against
+  children:
+  - node: "Osiris, Dionysus, Attis — dying and rising divine figures were common"
+    lr_min: 0.35
+    lr_max: 0.65
     evidence_type: against
-    children:
-      - node: "Gospels written 40-70 years after events — ample time for myth"
-        lr_min: 0.30
-        lr_max: 0.60
-        evidence_type: against
-      - node: "Infancy narratives, resurrection, miracles show theological elaboration"
-        lr_min: 0.30
-        lr_max: 0.60
-        evidence_type: against
-      - node: "Legendary elaboration is compatible with a historical core"
-        lr_min: 1.5
-        lr_max: 3.5
-        evidence_type: for
-
-  - node: "Dying-and-rising god parallels in contemporary mystery religions"
-    lr_min: 0.50
-    lr_max: 1.10
-    lr_dist: log_uniform
-    evidence_type: against
-    children:
-      - node: "Osiris, Dionysus, Attis — dying and rising divine figures were common"
-        lr_min: 0.35
-        lr_max: 0.65
-        evidence_type: against
-      - node: "Parallels are less exact than often claimed — details differ significantly"
-        lr_min: 1.5
-        lr_max: 3.0
-        evidence_type: for
+  - node: "Parallels are less exact than often claimed — details differ significantly"
+    lr_min: 1.5
+    lr_max: 3.0
+    evidence_type: for

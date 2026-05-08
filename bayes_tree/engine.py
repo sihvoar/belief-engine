@@ -63,115 +63,149 @@ def sample_lr(d: NodeDict) -> float:
 # ── Validation ────────────────────────────────────────────────────────────────
 
 def validate_node(data: NodeDict, path: str = "root") -> list[str]:
-    """Validate node for logical consistency between evidence_type and LR."""
+    """Validate node for logical consistency.
+
+    Raises ValueError if a node has both children and LR parameters
+    (internal nodes must not carry evidence — only leaves do).
+    """
     warnings: list[str] = []
-    et = data.get('evidence_type', 'neutral')
-    lrpt = data.get('likelihood_ratio', None)
-    lrlo = data.get('lr_min', None)
-    lrhi = data.get('lr_max', None)
+    has_children = bool(data.get('children'))
+    has_lr = any(k in data for k in ('lr_min', 'lr_max', 'likelihood_ratio'))
 
-    if lrpt is not None:
-        lr_center: Optional[float] = float(lrpt)
-    elif lrlo is not None and lrhi is not None:
-        lr_center = math.exp((math.log(max(float(lrlo), 1e-12)) +
-                              math.log(max(float(lrhi), 1e-12))) / 2)
-    else:
-        lr_center = None
-
-    if lr_center is not None:
-        if et == 'for' and lr_center < 1.0:
-            warnings.append(
-                f"  ⚠  '{data['node']}'\n"
-                f"     evidence_type=for but LR mean={lr_center:.3f} < 1.0\n"
-                f"     → LR below 1.0 means counter-evidence"
-            )
-        elif et == 'against' and lr_center > 1.0:
-            warnings.append(
-                f"  ⚠  '{data['node']}'\n"
-                f"     evidence_type=against but LR mean={lr_center:.3f} > 1.0\n"
-                f"     → LR above 1.0 means supporting evidence"
-            )
-
-    if lrlo is not None and lrhi is not None:
-        if float(lrlo) > float(lrhi):
-            warnings.append(
-                f"  ⚠  '{data['node']}'\n"
-                f"     lr_min={lrlo} > lr_max={lrhi} — order is wrong"
-            )
-    if lrlo is not None and float(lrlo) <= 0:
-        warnings.append(
-            f"  ⚠  '{data['node']}'\n"
-            f"     lr_min={lrlo} ≤ 0 — LR cannot be negative or zero"
+    if has_children and has_lr:
+        raise ValueError(
+            f"Node '{data['node']}' has children and an LR — internal nodes "
+            f"must not carry evidence.  Move the LR to a leaf, or remove "
+            f"the children."
         )
+
+    if not has_children:
+        et = data.get('evidence_type', 'neutral')
+        lrpt = data.get('likelihood_ratio', None)
+        lrlo = data.get('lr_min', None)
+        lrhi = data.get('lr_max', None)
+
+        if lrpt is not None:
+            lr_center: Optional[float] = float(lrpt)
+        elif lrlo is not None and lrhi is not None:
+            lr_center = math.exp((math.log(max(float(lrlo), 1e-12)) +
+                                  math.log(max(float(lrhi), 1e-12))) / 2)
+        else:
+            lr_center = None
+
+        if lr_center is not None:
+            if et == 'for' and lr_center < 1.0:
+                warnings.append(
+                    f"  ⚠  '{data['node']}'\n"
+                    f"     evidence_type=for but LR mean={lr_center:.3f} < 1.0\n"
+                    f"     → LR below 1.0 means counter-evidence"
+                )
+            elif et == 'against' and lr_center > 1.0:
+                warnings.append(
+                    f"  ⚠  '{data['node']}'\n"
+                    f"     evidence_type=against but LR mean={lr_center:.3f} > 1.0\n"
+                    f"     → LR above 1.0 means supporting evidence"
+                )
+
+        if lrlo is not None and lrhi is not None:
+            if float(lrlo) > float(lrhi):
+                warnings.append(
+                    f"  ⚠  '{data['node']}'\n"
+                    f"     lr_min={lrlo} > lr_max={lrhi} — order is wrong"
+                )
+        if lrlo is not None and float(lrlo) <= 0:
+            warnings.append(
+                f"  ⚠  '{data['node']}'\n"
+                f"     lr_min={lrlo} ≤ 0 — LR cannot be negative or zero"
+            )
 
     for child in data.get('children', []):
         warnings.extend(validate_node(child, path + " → " + data['node']))
     return warnings
 
 
+# ── Leaf collection ───────────────────────────────────────────────────────────
+
+def collect_leaves(data: NodeDict) -> list[NodeDict]:
+    """Recursively collect all leaf nodes (nodes without children)."""
+    children = data.get('children', [])
+    if not children:
+        return [data]
+    leaves: list[NodeDict] = []
+    for child in children:
+        leaves.extend(collect_leaves(child))
+    return leaves
+
+
+def _collect_subtree_leaves(data: NodeDict) -> list[NodeDict]:
+    """Collect leaf nodes from a subtree (excluding the root's own node)."""
+    return collect_leaves(data)
+
+
 # ── Simulation ────────────────────────────────────────────────────────────────
 
 def sim_root(data: NodeDict) -> tuple[float, float]:
     """
-    Combine all top-level branches as evidence (log-odds sum).
-    Supports correlation_group on children for dependent evidence.
+    Flat leaf-only posterior computation.
+
+    Collects all leaf nodes, samples one LR per leaf, sums log-LRs,
+    and applies once to the root prior.  Internal nodes are pure
+    groupers and carry no evidence.
+
+    Supports correlation_group on leaves for dependent evidence
+    (Gaussian copula).
+
     Returns (posterior, effective_lr).
     """
     prior = data.get('prior', 0.5)
-    children = data.get('children', [])
-    if not children:
+    leaves = collect_leaves(data)
+    if not leaves:
         return prior, 1.0
 
     base_lo = to_lo(prior)
 
-    # Check for correlation groups
+    # Check for correlation groups among leaves
     groups: dict[str, list[int]] = {}
-    for i, ch in enumerate(children):
-        grp = ch.get('correlation_group')
+    for i, leaf in enumerate(leaves):
+        grp = leaf.get('correlation_group')
         if grp is not None:
             groups.setdefault(str(grp), []).append(i)
 
-    # Only groups with 2+ members need correlated sampling
     corr_groups = {k: v for k, v in groups.items() if len(v) >= 2}
 
     if not corr_groups:
         # Fast path: all independent
-        total_lo = base_lo
-        for child in children:
-            lr = sample_lr(child)
-            branch_post = bayes_upd(prior, lr)
-            total_lo += to_lo(branch_post) - base_lo
-        posterior = from_lo(total_lo)
-        return posterior, post_to_lr(prior, posterior)
+        total_log_lr = sum(
+            math.log(max(sample_lr(leaf), 1e-12)) for leaf in leaves
+        )
+        posterior = from_lo(base_lo + total_log_lr)
+        return posterior, math.exp(total_log_lr)
 
-    # Correlated path: use Gaussian copula for grouped branches
-    n = len(children)
+    # Correlated path: Gaussian copula for grouped leaves
+    n = len(leaves)
     z = [random.gauss(0, 1) for _ in range(n)]
 
     for _grp_name, indices in corr_groups.items():
-        rho = float(children[indices[0]].get('rho', 0.5))
-        # Cholesky-like mixing: correlate all members to the first
+        rho = float(leaves[indices[0]].get('rho', 0.5))
         anchor = indices[0]
         for member in indices[1:]:
             z[member] = (rho * z[anchor]
                          + math.sqrt(max(0, 1 - rho * rho)) * z[member])
 
-    # Convert standard normals to uniform quantiles via CDF
     def _norm_cdf(x: float) -> float:
         return 0.5 * (1.0 + math.erf(x / math.sqrt(2)))
 
-    total_lo = base_lo
-    for i, child in enumerate(children):
-        grp = child.get('correlation_group')
+    total_log_lr = 0.0
+    for i, leaf in enumerate(leaves):
+        grp = leaf.get('correlation_group')
         if grp is not None and str(grp) in corr_groups:
-            lr = _sample_lr_quantile(child, _norm_cdf(z[i]))
+            lr = _sample_lr_quantile(leaf, _norm_cdf(z[i]))
         else:
-            lr = sample_lr(child)
-        branch_post = bayes_upd(prior, lr)
-        total_lo += to_lo(branch_post) - base_lo
+            lr = sample_lr(leaf)
+        total_log_lr += math.log(max(lr, 1e-12))
 
-    posterior = from_lo(total_lo)
-    return posterior, post_to_lr(prior, posterior)
+    posterior = from_lo(base_lo + total_log_lr)
+    return posterior, math.exp(total_log_lr)
 
 
 def _sample_lr_quantile(d: NodeDict, u: float) -> float:
@@ -273,8 +307,15 @@ class NodeResult:
 
 def collect(data: NodeDict, n_sim: int, prior: float,
             is_root: bool = False) -> NodeResult:
-    """Collect statistics for tree view."""
+    """Collect statistics for tree view.
+
+    - Root: runs full sim_root (all leaves).
+    - Internal nodes: compute subtree contribution (their leaves only)
+      with root prior as input — purely for human insight.
+    - Leaf nodes: single-LR Bayesian update from root prior.
+    """
     lrpt = data.get('likelihood_ratio', None)
+    has_children = bool(data.get('children'))
 
     if is_root:
         results = [sim_root(data) for _ in range(n_sim)]
@@ -292,7 +333,33 @@ def collect(data: NodeDict, n_sim: int, prior: float,
         )
         for child in data.get('children', []):
             nr.children.append(collect(child, n_sim, prior, is_root=False))
+
+    elif has_children:
+        # Internal node — subtree contribution
+        leaves = collect_leaves(data)
+        base_lo = to_lo(prior)
+        posteriors = []
+        eff_lrs = []
+        for _ in range(n_sim):
+            total_log_lr = sum(
+                math.log(max(sample_lr(lf), 1e-12)) for lf in leaves
+            )
+            posteriors.append(from_lo(base_lo + total_log_lr))
+            eff_lrs.append(math.exp(total_log_lr))
+        s = sts(posteriors)
+        lr_s = sts(eff_lrs)
+        nr = NodeResult(
+            name=data['node'],
+            etype=data.get('evidence_type', 'neutral'),
+            lr_min=lr_s['p5'], lr_max=lr_s['p95'], lr_pt=None,
+            lr_derived=True,
+            prior=prior, med=s['median'], p5=s['p5'], p95=s['p95']
+        )
+        for child in data.get('children', []):
+            nr.children.append(collect(child, n_sim, prior, is_root=False))
+
     else:
+        # Leaf node — direct evidence
         lrlo = float(data.get('lr_min', lrpt or 1.0))
         lrhi = float(data.get('lr_max', lrpt or 1.0))
         samples = [bayes_upd(prior, sample_lr(data)) for _ in range(n_sim)]
@@ -303,8 +370,7 @@ def collect(data: NodeDict, n_sim: int, prior: float,
             lr_derived=False,
             prior=prior, med=s['median'], p5=s['p5'], p95=s['p95']
         )
-        for child in data.get('children', []):
-            nr.children.append(collect(child, n_sim, s['median'], is_root=False))
+
     return nr
 
 

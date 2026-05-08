@@ -2,9 +2,6 @@ node: Is atheism (no gods exist) the correct position?
 prior: 0.5
 children:
 - node: Problem of evil and suffering
-  lr_min: 1.5
-  lr_max: 4.0
-  lr_dist: log_uniform
   evidence_type: for
   children:
   - node: Natural disasters and child suffering have no moral justification
@@ -20,9 +17,6 @@ children:
     lr_max: 0.8
     evidence_type: against
 - node: Science explains the world without invoking God
-  lr_min: 1.5
-  lr_max: 3.5
-  lr_dist: log_uniform
   evidence_type: for
   children:
   - node: Evolution explains biological complexity and design
@@ -42,9 +36,6 @@ children:
     lr_max: 0.8
     evidence_type: against
 - node: No credible evidence of divine intervention
-  lr_min: 1.3
-  lr_max: 3.0
-  lr_dist: log_uniform
   evidence_type: for
   children:
   - node: No verified miracles survive rigorous investigation
@@ -60,9 +51,6 @@ children:
     lr_max: 0.9
     evidence_type: against
 - node: Psychological and sociological origins of religion
-  lr_min: 1.3
-  lr_max: 2.5
-  lr_dist: log_uniform
   evidence_type: for
   children:
   - node: Hyperactive agent detection (HADD) explains belief in gods
@@ -82,9 +70,6 @@ children:
     lr_max: 0.9
     evidence_type: against
 - node: Incoherence of classical theistic attributes
-  lr_min: 1.2
-  lr_max: 3.0
-  lr_dist: log_uniform
   evidence_type: for
   children:
   - node: Omnipotence paradox (can God create a stone He cannot lift?)
@@ -104,9 +89,6 @@ children:
     lr_max: 0.8
     evidence_type: against
 - node: Divine hiddenness
-  lr_min: 1.3
-  lr_max: 3.0
-  lr_dist: log_uniform
   evidence_type: for
   children:
   - node: Sincere seekers fail to find evidence of God
@@ -122,9 +104,6 @@ children:
     lr_max: 0.8
     evidence_type: against
 - node: Parsimony and Occam's razor
-  lr_min: 1.2
-  lr_max: 2.5
-  lr_dist: log_uniform
   evidence_type: for
   children:
   - node: Naturalism explains observations with fewer assumptions
@@ -141,9 +120,6 @@ children:
     lr_max: 0.9
     evidence_type: against
 - node: Fine-tuning and cosmological arguments challenge atheism
-  lr_min: 0.5
-  lr_max: 0.99
-  lr_dist: log_uniform
   evidence_type: against
   children:
   - node: Physical constants appear fine-tuned for life
@@ -166,9 +142,6 @@ children:
     lr_max: 2.0
     evidence_type: for
 - node: Consciousness and subjective experience
-  lr_min: 0.9999999999999999
-  lr_max: 0.9999999999999999
-  lr_dist: log_uniform
   evidence_type: against
   children:
   - node: The hard problem of consciousness lacks materialist solution
@@ -186,11 +159,12 @@ children:
     lr_max: 2.0
     evidence_type: for
 - node: Moral realism and objective values
-  lr_min: 0.3
-  lr_max: 0.7
-  lr_dist: log_uniform
   evidence_type: against
   children:
+  - node: Moral realism challenges purely materialist worldview
+    lr_min: 0.3
+    lr_max: 0.7
+    evidence_type: against
   - node: Objective morality seems to require a transcendent ground
     lr_min: 1.0
     lr_max: 1.0
@@ -210,9 +184,6 @@ children:
     lr_max: 2.0
     evidence_type: for
 - node: Religious experience as counter-evidence
-  lr_min: 0.3
-  lr_max: 0.7
-  lr_dist: log_uniform
   evidence_type: against
   children:
   - node: Billions report personal experience of the divine

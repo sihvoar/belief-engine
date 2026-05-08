@@ -11,7 +11,7 @@ import math
 from typing import Any
 
 from bayes_tree.adversarial.attacks import AttackResult
-from bayes_tree.engine import NodeDict
+from bayes_tree.engine import NodeDict, collect_leaves
 
 
 def score_attack(result: AttackResult, data: NodeDict) -> float:
@@ -76,13 +76,13 @@ def _score_lr_calibration(result: AttackResult, data: NodeDict) -> float:
     """
     score = 5.0
     details = result.details
-    idx = details.get('branch_idx', 0)
-    children = data.get('children', [])
+    idx = details.get('leaf_idx', details.get('branch_idx', 0))
+    leaves = collect_leaves(data)
 
-    if idx < len(children):
-        child = children[idx]
-        lr_min = float(child.get('lr_min', child.get('likelihood_ratio', 1.0)))
-        lr_max = float(child.get('lr_max', child.get('likelihood_ratio', 1.0)))
+    if idx < len(leaves):
+        leaf = leaves[idx]
+        lr_min = float(leaf.get('lr_min', leaf.get('likelihood_ratio', 1.0)))
+        lr_max = float(leaf.get('lr_max', leaf.get('likelihood_ratio', 1.0)))
         geo_mean = math.sqrt(max(lr_min, 1e-12) * max(lr_max, 1e-12))
 
         # Extreme LRs are more attackable (harder to justify)
@@ -95,7 +95,7 @@ def _score_lr_calibration(result: AttackResult, data: NodeDict) -> float:
             score += 0.5
 
         # Qualitative evidence is more attackable
-        name = child.get('node', '').lower()
+        name = leaf.get('node', '').lower()
         if _is_qualitative(name):
             score += 1.5
         elif _is_quantitative(name):
@@ -128,13 +128,13 @@ def _score_misspecification(result: AttackResult, data: NodeDict) -> float:
     """
     score = 4.0
     details = result.details
-    idx = details.get('branch_idx', 0)
-    children = data.get('children', [])
+    idx = details.get('leaf_idx', details.get('branch_idx', 0))
+    leaves = collect_leaves(data)
 
-    if idx < len(children):
-        child = children[idx]
-        lr_min = float(child.get('lr_min', 1.0))
-        lr_max = float(child.get('lr_max', 1.0))
+    if idx < len(leaves):
+        leaf = leaves[idx]
+        lr_min = float(leaf.get('lr_min', 1.0))
+        lr_max = float(leaf.get('lr_max', 1.0))
         ratio = lr_max / max(lr_min, 1e-12)
 
         # Wider intervals → distribution choice matters more

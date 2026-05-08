@@ -5,148 +5,124 @@ children:
 
   # ── SUPPORTING THE LEGEND HYPOTHESIS ────────────────────────────────────────
 
-  - node: "Earliest sources do not mention the empty tomb"
+- node: "Earliest sources do not mention the empty tomb"
+  evidence_type: for
+  children:
+  - node: "Paul in the 50s does not mention the empty tomb"
     lr_min: 2.0
-    lr_max: 6.0
-    lr_dist: log_uniform
+    lr_max: 5.0
     evidence_type: for
-    children:
-      - node: "Paul in the 50s does not mention the empty tomb"
-        lr_min: 2.0
-        lr_max: 5.0
-        evidence_type: for
-      - node: "1 Cor. 15 resurrection list is based on visions not a tomb"
-        lr_min: 1.5
-        lr_max: 4.0
-        evidence_type: for
-      - node: "The empty tomb appears only in Mark ~70 CE"
-        lr_min: 1.5
-        lr_max: 4.0
-        evidence_type: for
-
-  - node: "Gospels are late and interdependent sources"
+  - node: "1 Cor. 15 resurrection list is based on visions not a tomb"
     lr_min: 1.5
     lr_max: 4.0
-    lr_dist: log_uniform
     evidence_type: for
-    children:
-      - node: "Mark ~40 years after the events — sufficient time for legend"
-        lr_min: 1.5
-        lr_max: 3.5
-        evidence_type: for
-      - node: "Matthew, Luke and John copy and expand Mark"
-        lr_min: 1.5
-        lr_max: 3.0
-        evidence_type: for
-      - node: "Rapid legend development is known in ancient literature"
-        lr_min: 1.5
-        lr_max: 3.0
-        evidence_type: for
-
-  - node: "No independent non-Christian sources about the tomb"
+  - node: "The empty tomb appears only in Mark ~70 CE"
     lr_min: 1.5
     lr_max: 4.0
-    lr_dist: log_uniform
     evidence_type: for
-    children:
-      - node: "Josephus and Tacitus mention Jesus but not the tomb"
-        lr_min: 1.5
-        lr_max: 3.5
-        evidence_type: for
-      - node: "Romans did not document the event"
-        lr_min: 1.2
-        lr_max: 3.0
-        evidence_type: for
 
-  - node: "Theological motivation for the narrative's development"
+- node: "Gospels are late and interdependent sources"
+  evidence_type: for
+  children:
+  - node: "Mark ~40 years after the events — sufficient time for legend"
     lr_min: 1.5
     lr_max: 3.5
-    lr_dist: log_uniform
     evidence_type: for
-    children:
-      - node: "A physical empty tomb proves bodily resurrection"
-        lr_min: 1.5
-        lr_max: 3.0
-        evidence_type: for
-      - node: "Guard story (Matt. 28) is clearly an apologetic addition"
-        lr_min: 1.5
-        lr_max: 3.5
-        evidence_type: for
+  - node: "Matthew, Luke and John copy and expand Mark"
+    lr_min: 1.5
+    lr_max: 3.0
+    evidence_type: for
+  - node: "Rapid legend development is known in ancient literature"
+    lr_min: 1.5
+    lr_max: 3.0
+    evidence_type: for
 
-  - node: "Joseph of Arimathea is probably a fictional character"
+- node: "No independent non-Christian sources about the tomb"
+  evidence_type: for
+  children:
+  - node: "Josephus and Tacitus mention Jesus but not the tomb"
+    lr_min: 1.5
+    lr_max: 3.5
+    evidence_type: for
+  - node: "Romans did not document the event"
+    lr_min: 1.2
+    lr_max: 3.0
+    evidence_type: for
+
+- node: "Theological motivation for the narrative's development"
+  evidence_type: for
+  children:
+  - node: "A physical empty tomb proves bodily resurrection"
+    lr_min: 1.5
+    lr_max: 3.0
+    evidence_type: for
+  - node: "Guard story (Matt. 28) is clearly an apologetic addition"
+    lr_min: 1.5
+    lr_max: 3.5
+    evidence_type: for
+
+- node: "Joseph of Arimathea is probably a fictional character"
+  evidence_type: for
+  children:
+  - node: "No mention in other sources — completely unknown person"
+    lr_min: 1.5
+    lr_max: 3.5
+    evidence_type: for
+  - node: "The name Joseph is symbolically charged in Hebrew tradition"
+    lr_min: 1.2
+    lr_max: 2.5
+    evidence_type: for
+  - node: "Romans generally did not release bodies of the crucified"
     lr_min: 1.5
     lr_max: 4.0
-    lr_dist: log_uniform
     evidence_type: for
-    children:
-      - node: "No mention in other sources — completely unknown person"
-        lr_min: 1.5
-        lr_max: 3.5
-        evidence_type: for
-      - node: "The name Joseph is symbolically charged in Hebrew tradition"
-        lr_min: 1.2
-        lr_max: 2.5
-        evidence_type: for
-      - node: "Romans generally did not release bodies of the crucified"
-        lr_min: 1.5
-        lr_max: 4.0
-        evidence_type: for
-      - node: "A council member burying a political prisoner — implausible scenario"
-        lr_min: 1.2
-        lr_max: 3.0
-        evidence_type: for
+  - node: "A council member burying a political prisoner — implausible scenario"
+    lr_min: 1.2
+    lr_max: 3.0
+    evidence_type: for
 
   # ── AGAINST THE LEGEND HYPOTHESIS ─────────────────────────────────────────────
 
-  - node: "The tomb is mentioned early relative to the events"
-    lr_min: 0.20
-    lr_max: 0.55
-    lr_dist: log_uniform
+- node: "The tomb is mentioned early relative to the events"
+  evidence_type: against
+  children:
+  - node: "~40 years is a short time for legend to develop"
+    lr_min: 0.25
+    lr_max: 0.60
     evidence_type: against
-    children:
-      - node: "~40 years is a short time for legend to develop"
-        lr_min: 0.25
-        lr_max: 0.60
-        evidence_type: against
-      - node: "Eyewitnesses could have disputed the account"
-        lr_min: 0.25
-        lr_max: 0.60
-        evidence_type: against
-      - node: "Alexander legends and other examples arise much faster"
-        lr_min: 1.5
-        lr_max: 3.0
-        evidence_type: for
+  - node: "Eyewitnesses could have disputed the account"
+    lr_min: 0.25
+    lr_max: 0.60
+    evidence_type: against
+  - node: "Alexander legends and other examples arise much faster"
+    lr_min: 1.5
+    lr_max: 3.0
+    evidence_type: for
 
-  - node: "Opponents' theft tradition — but a very uncertain source"
-    lr_min: 0.60
-    lr_max: 1.30
-    lr_dist: log_uniform
-    evidence_type: neutral
-    children:
-      - node: "Theft tradition is only in Matthew — not an independent source"
-        lr_min: 1.5
-        lr_max: 3.5
-        evidence_type: for
-      - node: "If the tradition is genuine it presupposes the tomb was empty"
-        lr_min: 0.30
-        lr_max: 0.80
-        evidence_type: against
-      - node: "Tradition may be a reaction to the Christian claim — circular reasoning"
-        lr_min: 1.5
-        lr_max: 3.5
-        evidence_type: for
+- node: "Opponents' theft tradition — but a very uncertain source"
+  evidence_type: neutral
+  children:
+  - node: "Theft tradition is only in Matthew — not an independent source"
+    lr_min: 1.5
+    lr_max: 3.5
+    evidence_type: for
+  - node: "If the tradition is genuine it presupposes the tomb was empty"
+    lr_min: 0.30
+    lr_max: 0.80
+    evidence_type: against
+  - node: "Tradition may be a reaction to the Christian claim — circular reasoning"
+    lr_min: 1.5
+    lr_max: 3.5
+    evidence_type: for
 
-  - node: "Female witnesses — not evidence of historicity"
-    lr_min: 0.70
-    lr_max: 1.40
-    lr_dist: log_uniform
+- node: "Female witnesses — not evidence of historicity"
+  evidence_type: neutral
+  children:
+  - node: "Disciples were hiding — women were the only practical option"
+    lr_min: 0.80
+    lr_max: 1.50
     evidence_type: neutral
-    children:
-      - node: "Disciples were hiding — women were the only practical option"
-        lr_min: 0.80
-        lr_max: 1.50
-        evidence_type: neutral
-      - node: "Legends can include unfavorable details for realism"
-        lr_min: 0.80
-        lr_max: 1.50
-        evidence_type: neutral
+  - node: "Legends can include unfavorable details for realism"
+    lr_min: 0.80
+    lr_max: 1.50
+    evidence_type: neutral
