@@ -53,6 +53,12 @@ def sample_lr(d: NodeDict) -> float:
         t = random.betavariate(float(d.get('lr_alpha', 2)),
                                float(d.get('lr_beta', 2)))
         return lo + t * (hi - lo)
+    elif dist == 'log_beta':
+        t = random.betavariate(float(d.get('lr_alpha', 2)),
+                               float(d.get('lr_beta', 2)))
+        log_lo = math.log(max(lo, 1e-12))
+        log_hi = math.log(max(hi, 1e-12))
+        return math.exp(log_lo + t * (log_hi - log_lo))
     else:  # log_uniform
         return math.exp(random.uniform(
             math.log(max(lo, 1e-12)),
@@ -222,6 +228,13 @@ def _sample_lr_quantile(d: NodeDict, u: float) -> float:
         beta_p = float(d.get('lr_beta', 2))
         t = _beta_inv(u, alpha, beta_p)
         return lo + t * (hi - lo)
+    elif dist == 'log_beta':
+        alpha = float(d.get('lr_alpha', 2))
+        beta_p = float(d.get('lr_beta', 2))
+        t = _beta_inv(u, alpha, beta_p)
+        log_lo = math.log(max(lo, 1e-12))
+        log_hi = math.log(max(hi, 1e-12))
+        return math.exp(log_lo + t * (log_hi - log_lo))
     else:  # log_uniform
         log_lo = math.log(max(lo, 1e-12))
         log_hi = math.log(max(hi, 1e-12))

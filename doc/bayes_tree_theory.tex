@@ -180,6 +180,13 @@ a point value), the tool uses Monte Carlo simulation:
 \item Report summary statistics: median, mean, 90\% credible interval.
 \end{enumerate}
 
+\textbf{Interpretation.}  The resulting distribution is the distribution of the
+posterior \emph{point estimate} induced by uncertainty in the user-specified LR
+intervals and distribution families.  It is \emph{not} a hierarchical Bayesian
+model over the likelihood ratios themselves---the LR intervals are treated as
+fixed inputs, and Monte Carlo sampling propagates that interval uncertainty
+into a distribution over possible posteriors.
+
 \subsection{LR Sampling Distributions}
 
 Three distributions are available for sampling LR values from the interval
@@ -202,6 +209,19 @@ $[\text{lr\_min}, \text{lr\_max}]$:
   \begin{equation}
   \text{LR} = \text{lr\_min} + \text{Beta}(\alpha, \beta) \times (\text{lr\_max} - \text{lr\_min})
   \end{equation}
+  \textbf{Caveat:} this scaling is \emph{linear}.  On a wide interval such as
+  $[0.01, 100]$, a linearly scaled Beta puts almost all probability mass near
+  \texttt{lr\_min} in log terms, which is rarely the analyst's intention.
+  Prefer \texttt{log\_uniform} or \texttt{log\_beta} for wide intervals.
+
+\item[log\_beta] --- Beta distribution in log-space.  The Beta variate is used
+  to interpolate between $\ln(\text{lr\_min})$ and $\ln(\text{lr\_max})$:
+  \begin{equation}
+  \text{LR} = \exp\!\Big(\ln(\text{lr\_min}) + \text{Beta}(\alpha,\beta)
+    \times \big(\ln(\text{lr\_max}) - \ln(\text{lr\_min})\big)\Big)
+  \end{equation}
+  This gives the analyst shape control (via $\alpha$, $\beta$) while respecting
+  the multiplicative nature of likelihood ratios.
 \end{description}
 
 %═══════════════════════════════════════════════════════════════════════════════
@@ -279,7 +299,7 @@ Each child node is either a \textbf{leaf} (carries an LR) or an
   # Option B: Uncertainty interval (preferred)
   lr_min: 0.01              # Lower bound of LR
   lr_max: 0.10              # Upper bound of LR
-  lr_dist: log_uniform      # Distribution: log_uniform | uniform | beta
+  lr_dist: log_uniform      # Distribution: log_uniform | uniform | beta | log_beta
 
   # Optional for beta distribution
   lr_alpha: 2               # Beta shape parameter alpha
@@ -565,10 +585,12 @@ prior: 0.10
 children:
   - node: "Positive blood test"
     evidence_type: for
-    lr_min: 3.0
-    lr_max: 8.0
-    lr_dist: log_uniform
     children:
+      - node: "Test result itself"
+        evidence_type: for
+        lr_min: 3.0
+        lr_max: 8.0
+        lr_dist: log_uniform
       - node: "Test specificity concerns"
         evidence_type: against
         lr_min: 0.5
@@ -600,7 +622,7 @@ children:
 
 \begin{lstlisting}[language=bash]
 # Install
-pip install bayes-tree
+pip install belief-engine
 
 # Terminal UI with histogram and tree view
 bayes-tree examples/mycase.yaml
@@ -844,6 +866,24 @@ The audit produces a verdict:
   \texttt{rho} to model the dependence explicitly.  The adversarial
   correlation attack (Section~\ref{sec:adversarial}) can quantify the
   impact of any remaining unmodeled correlations.
+
+  \textbf{Latent common causes} are the most dangerous form of dependence
+  because the analyst may not be aware of them.  Examples:
+  \begin{itemize}
+  \item Multiple ``independent'' eyewitnesses who all heard the same
+    earlier rumor before testifying---their testimonies are correlated
+    through the rumor, not through the event itself.
+  \item Multiple published studies that drew from the same underlying
+    patient registry or shared dataset---their results are correlated even
+    if the authors were unaware of each other.
+  \item Two archaeological dating methods that rely on the same calibration
+    curve share a systematic error component.
+  \end{itemize}
+  No \texttt{correlation\_group} can capture a dependence the analyst does
+  not know about.  We recommend running the adversarial correlation attack
+  as a routine sanity check: if injecting $\rho = 0.5$ between any pair of
+  strong branches causes a large posterior shift, the conclusion is fragile
+  and the independence of those branches should be explicitly justified.
 
 \item \textbf{Leaves-only evidence.} Only leaf nodes carry likelihood ratios;
   internal nodes are pure groupers.  A YAML file with an LR on a node that

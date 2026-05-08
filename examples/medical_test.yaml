@@ -1,0 +1,85 @@
+# Medical diagnostic test — likelihood ratios from published test performance
+#
+# Scenario: Should we believe a patient has disease X given a positive
+# screening test result?
+#
+# This example demonstrates how to derive LR intervals from empirical
+# sensitivity/specificity data rather than subjective judgment.
+#
+# Sources for LR computation:
+#   Sensitivity (true-positive rate):  reported 88–96 % across studies
+#   Specificity (true-negative rate):  reported 90–97 % across studies
+#
+#   LR+ = sensitivity / (1 − specificity)
+#     low  = 0.88 / (1 − 0.90) = 8.8
+#     high = 0.96 / (1 − 0.03) = 32.0    (i.e. 0.96 / 0.03)
+#
+#   LR− = (1 − sensitivity) / specificity
+#     low  = (1 − 0.96) / 0.97 ≈ 0.041
+#     high = (1 − 0.88) / 0.90 ≈ 0.133
+#
+# Prior: disease prevalence in the screened population ≈ 2 %
+#   (typical for a moderate-prevalence condition in a targeted screen)
+
+node: "Patient has disease X given positive screening test?"
+prior: 0.02
+
+children:
+
+  - node: "Primary screening test result (positive)"
+    evidence_type: for
+    children:
+
+      - node: "Positive test — LR+ from sensitivity/specificity"
+        # LR+ = sens / (1 − spec)
+        # Range: 0.88/0.10 = 8.8  to  0.96/0.03 = 32.0
+        lr_min: 8.8
+        lr_max: 32.0
+        lr_dist: log_uniform
+        evidence_type: for
+
+      - node: "Lab sample handling quality (possible pre-analytic error)"
+        # ~5 % of samples have handling issues that can cause false positives.
+        # If handling was adequate, this is neutral (LR ≈ 1).
+        # Interval reflects uncertainty about sample quality.
+        lr_min: 0.7
+        lr_max: 1.0
+        evidence_type: against
+
+  - node: "Clinical presentation"
+    evidence_type: for
+    children:
+
+      - node: "Patient has two of three cardinal symptoms"
+        # In disease-positive patients, ~70 % show ≥ 2 cardinal symptoms.
+        # In disease-negative patients, ~30 % show ≥ 2 (common complaints).
+        # LR = 0.70/0.30 ≈ 2.3;  range accounts for study variability.
+        lr_min: 1.5
+        lr_max: 3.5
+        evidence_type: for
+
+      - node: "No fever (expected in ~60 % of true cases)"
+        # P(no fever | disease) ≈ 0.40;  P(no fever | no disease) ≈ 0.85
+        # LR = 0.40/0.85 ≈ 0.47
+        lr_min: 0.35
+        lr_max: 0.60
+        evidence_type: against
+
+  - node: "Epidemiological context"
+    evidence_type: for
+    children:
+
+      - node: "Patient in high-risk demographic (age, occupation)"
+        # Prevalence in this subgroup is ~3× the base rate.
+        # This translates to LR ≈ 2–4 relative to the general screened pool.
+        lr_min: 2.0
+        lr_max: 4.0
+        evidence_type: for
+
+      - node: "No known exposure to environmental risk factor"
+        # ~50 % of true cases have identifiable exposure; ~20 % of non-cases
+        # report potential exposure.  Absence of exposure:
+        # LR = P(no exposure|disease)/P(no exposure|¬disease) = 0.50/0.80 ≈ 0.63
+        lr_min: 0.45
+        lr_max: 0.80
+        evidence_type: against

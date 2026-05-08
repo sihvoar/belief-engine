@@ -1,8 +1,8 @@
 # Belief Engine
 
-**A computational framework for structured Bayesian argumentation under uncertainty.**
+**Make your assumptions explicit. Combine uncertain evidence into a posterior distribution with calibrated uncertainty propagation.**
 
-*Not an AI that thinks for you — a calculator for belief revision that forces you to make your assumptions explicit.*
+*Not an AI that thinks for you — a calculator for belief revision that forces you to show your work.*
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9+-green.svg)](https://python.org)
@@ -15,6 +15,8 @@ Belief Engine provides a formal method for evaluating complex hypotheses by deco
 
 The approach bridges informal argumentation and formal probabilistic reasoning — making the logical structure of multi-evidence problems explicit, auditable, and reproducible.
 
+> **Honesty note.** Belief Engine does not eliminate subjectivity — it makes subjective judgments explicit, auditable, and testable. The output is only as good as the likelihood ratios you supply. The tool's value is in *transparency*: it forces you to state your assumptions where others can inspect, challenge, and improve them. Use the sensitivity analysis and adversarial audit to stress-test your inputs.
+
 > **Note on naming**: The Python import package is `bayes_tree` for historical reasons. The PyPI distribution name is `belief-engine` to avoid confusion with the unrelated phylogenetic "BayesTree" method in bioinformatics.
 
 ## Motivation
@@ -24,7 +26,7 @@ Many important questions in science, history, forensics, and decision-making inv
 - Rely on qualitative narrative weighing (subjective, non-reproducible), or
 - Require full probabilistic graphical models (high expertise barrier).
 
-Belief Engine occupies a practical middle ground: it requires only that the analyst estimate *how diagnostic* each piece of evidence is (expressed as a likelihood ratio interval), then handles the combination and uncertainty propagation computationally.
+Belief Engine occupies a practical middle ground: it requires only that the analyst estimate *how diagnostic* each piece of evidence is (expressed as a likelihood ratio interval), then handles the combination and uncertainty propagation computationally. The result is a structured, transparent argument where every assumption is visible and every disagreement can be localized to a specific likelihood ratio.
 
 ## Method
 
@@ -70,7 +72,8 @@ This design enforces a **single counting rule**: each piece of evidence enters t
 |-------------|----------|
 | `log_uniform` (default) | Appropriate when LR uncertainty spans orders of magnitude |
 | `uniform` | When LR uncertainty is symmetric on a linear scale |
-| `beta` | When the analyst has shape information (parameterised via `lr_alpha`, `lr_beta`) |
+| `beta` | When the analyst has shape information (parameterised via `lr_alpha`, `lr_beta`). **Caveat:** the beta distribution is linearly scaled into `[lr_min, lr_max]`. On wide intervals (e.g., `[0.01, 100]`), this puts most probability mass near `lr_min` in log terms, which is rarely what users want. Prefer `log_uniform` or `log_beta` for wide intervals. |
+| `log_beta` | Beta sampling in log-space: `LR = exp(log(lr_min) + Beta(α, β) × (log(lr_max) − log(lr_min)))`. Appropriate when the analyst has shape information and the LR interval spans orders of magnitude. |
 
 ## Installation
 
@@ -160,7 +163,7 @@ children:
       - node: "Supporting observation"
         lr_min: 1.5
         lr_max: 4.0
-        lr_dist: log_uniform   # log_uniform | uniform | beta
+        lr_dist: log_uniform   # log_uniform | uniform | beta | log_beta
         evidence_type: for     # for (LR > 1) | against (LR < 1) | neutral
 
       - node: "Counterpoint weakening A"
@@ -188,7 +191,7 @@ children:
     evidence_type: against
 ```
 
-> **Rule**: A node with `children` must not specify `lr_min`, `lr_max`, or `likelihood_ratio`. Internal nodes carry only `node` (label), `evidence_type` (for display), and `children`.
+> **Rule**: A node with `children` must not specify `lr_min`, `lr_max`, or `likelihood_ratio`. Internal nodes carry only `node` (label), `evidence_type` (for display), and `children`. This constraint is enforced at parse time to prevent double-counting: if an internal node carried its own LR alongside its children's LRs, that evidence would enter the posterior twice.
 
 ### Correlation Groups
 
@@ -210,7 +213,7 @@ When multiple evidence branches share a common methodological flaw (e.g., two ra
 
 The framework produces:
 
-1. **Posterior distribution** — full Monte Carlo sample with median, mean, standard deviation, and credible intervals.
+1. **Posterior distribution** — full Monte Carlo sample with median, mean, standard deviation, and credible intervals. *Note: this distribution reflects uncertainty in the posterior induced by the user-specified LR intervals and distribution families. It is not a hierarchical Bayesian model over the likelihood ratios themselves — the LR intervals are treated as fixed inputs, and Monte Carlo sampling propagates that interval uncertainty into a distribution over possible posteriors.*
 2. **Effective likelihood ratio** — the single LR equivalent to the combined evidence.
 3. **Evidence tree** — per-branch prior → posterior transformation with uncertainty.
 4. **Sensitivity analysis** — threshold exceedance probabilities.
@@ -231,13 +234,26 @@ Importance ranking:
 
 ## Case Studies
 
+### Data-grounded examples
+
+These examples use likelihood ratios derived from empirical data (test performance, experimental results). They are the best starting point for learning the tool.
+
 | Analysis | Hypothesis | Branches | Posterior |
 |----------|-----------|:--------:|-----------|
+| [`medical_test.yaml`](examples/medical_test.yaml) | Patient has disease X given positive screen | 7 | varies |
+| [`ab_test.yaml`](examples/ab_test.yaml) | A/B treatment genuinely improves conversion | 7 | varies |
 | [`napoleon.yaml`](examples/napoleon.yaml) | Napoleon was deliberately poisoned | 8 | ~7% |
-| [`shroud.yaml`](examples/shroud.yaml) | Shroud of Turin is authentic | 6 | ~2% |
-| [`god.yaml`](examples/god.yaml) | A theistic God exists | 10 | varies |
-| [`moses.yaml`](examples/moses.yaml) | Historical person behind Moses legend | 7 | varies |
 | [`hitler.yaml`](examples/hitler.yaml) | Hitler was murdered (not suicide) | 6 | varies |
+
+### Illustrative / advanced — contested hypotheses
+
+The examples below apply the framework to contested religious and historical hypotheses where **likelihood ratios are necessarily subjective**. They are useful for exploring the tool's capabilities and for practicing structured disagreement, but the LRs should be treated as a starting point for argument — not a conclusion. Reasonable people will assign very different LRs to these branches; the value is in making those disagreements explicit and quantifiable.
+
+| Analysis | Hypothesis | Branches | Posterior |
+|----------|-----------|:--------:|-----------|
+| [`god.yaml`](examples/god.yaml) | A theistic God exists | 10 | varies |
+| [`shroud.yaml`](examples/shroud.yaml) | Shroud of Turin is authentic | 6 | ~2% |
+| [`moses.yaml`](examples/moses.yaml) | Historical person behind Moses legend | 7 | varies |
 | [`jesus_historicity.yaml`](examples/jesus_historicity.yaml) | Historical Jesus existed | 8 | varies |
 | [`empty_grave.yaml`](examples/empty_grave.yaml) | Empty tomb is later legend | 5 | varies |
 
@@ -258,6 +274,20 @@ The mathematical framework — Bayesian updating, log-odds combination, conditio
 - **Leaves-only evidence**: Only leaf nodes carry likelihood ratios. Internal nodes are pure groupers. This design prevents double-counting that arises when both a parent node and its children carry LRs.
 - **Analyst calibration**: Results are only as good as the LR estimates. The tool makes reasoning transparent but cannot verify inputs.
 - **Binary hypotheses**: The current framework evaluates *H* vs *¬H*. Multi-hypothesis extensions are planned.
+
+### Independence — the assumption you're most likely to get wrong
+
+The log-odds combination assumes that leaf evidence nodes are conditionally independent given *H* and *¬H*. In practice, this is the hardest assumption to satisfy because evidence can share **latent common causes** that are not immediately obvious:
+
+- **Shared information source**: Three "independent" eyewitnesses who all heard the same rumor before testifying are not independent — their testimonies are correlated through the rumor.
+- **Shared dataset**: Multiple published studies that drew from the same underlying patient registry or data warehouse produce correlated results, even if the authors were unaware of each other.
+- **Shared methodology**: Two archaeological dating methods that both rely on the same calibration curve share a systematic error component.
+
+The `correlation_group` / `rho` mechanism helps when you *know* about the dependence. But latent common causes — the ones you don't know about — are the real risk. Mitigations:
+
+1. **Ask explicitly**: For every pair of strong evidence branches, ask "Could these share a common information source, dataset, or methodological assumption?"
+2. **Run the adversarial correlation attack** (`--adversarial`): it systematically injects pairwise correlations and reports how much the posterior shifts. Large shifts indicate fragile independence assumptions.
+3. **When in doubt, merge**: If two pieces of evidence might be facets of the same underlying observation, combine them into a single leaf with a conservative LR.
 
 ## Validation
 

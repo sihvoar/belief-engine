@@ -1,0 +1,90 @@
+# A/B test interpretation — is treatment B better than control A?
+#
+# Scenario: An online experiment ran for two weeks with 10,000 users per arm.
+# Control (A): 3.0 % conversion rate  (300 / 10,000)
+# Treatment (B): 3.45 % conversion rate  (345 / 10,000)
+#
+# Hypothesis H: "Treatment B causes a genuine improvement in conversion."
+# ¬H: "There is no real difference; the observed lift is noise."
+#
+# Prior: Based on historical A/B tests at this company, ~20 % of tested
+# changes produce a real positive effect (most are neutral or negative).
+#
+# LR derivation for the primary result:
+#   Under H (true effect of +15 % relative lift), the probability of
+#   observing ≥ +15 % relative lift is roughly 50 % (we'd be at the
+#   expected value).
+#   Under ¬H (no effect), the probability of a +15 % relative lift by
+#   chance: p ≈ 0.07 from a two-proportion z-test (z ≈ 1.5).
+#   LR ≈ 0.50 / 0.07 ≈ 7.1
+#   Accounting for uncertainty in effect size and power: LR range 3–15.
+
+node: "Treatment B genuinely improves conversion over control A?"
+prior: 0.20
+
+children:
+
+  - node: "Primary A/B test result"
+    evidence_type: for
+    children:
+
+      - node: "Observed +15 % relative lift (p = 0.07 one-sided)"
+        # LR ≈ P(observe this lift | real effect) / P(observe this lift | no effect)
+        # Conservative range: 3–15 (accounts for multiple-testing, peeking)
+        lr_min: 3.0
+        lr_max: 15.0
+        lr_dist: log_uniform
+        evidence_type: for
+
+      - node: "Test ran for full planned duration (no early stopping)"
+        # Running to completion avoids inflated false-positive rates from
+        # peeking.  LR for proper methodology vs. not: ~1.1–1.5
+        # (modest boost to credibility of the result)
+        lr_min: 1.1
+        lr_max: 1.5
+        evidence_type: for
+
+  - node: "Supporting / contextual evidence"
+    evidence_type: for
+    children:
+
+      - node: "Qualitative user feedback supports the change"
+        # Positive feedback was observed in 65 % of surveyed users (vs.
+        # ~40 % baseline satisfaction with control).
+        # LR = 0.65/0.40 ≈ 1.6;  range 1.2–2.5 given survey noise.
+        lr_min: 1.2
+        lr_max: 2.5
+        evidence_type: for
+
+      - node: "Similar change failed in a prior experiment (6 months ago)"
+        # The prior experiment showed no lift.  If the treatment truly works,
+        # the earlier failure might be a fluke (~30 % chance); if it doesn't
+        # work, failure is expected (~85 %).
+        # LR = 0.30/0.85 ≈ 0.35
+        lr_min: 0.20
+        lr_max: 0.55
+        evidence_type: against
+
+  - node: "Threats to validity"
+    evidence_type: against
+    children:
+
+      - node: "Possible novelty effect (new UI attracts initial clicks)"
+        # Novelty effects typically decay within 1–2 weeks.  The test ran
+        # 2 weeks, so some novelty contamination is possible.
+        # LR for observing the lift given novelty-only (no real effect):
+        # P(lift | novelty, ¬H) ≈ 0.30;  P(lift | H) ≈ 0.50
+        # LR = P(this pattern | H) / P(pattern | ¬H) ≈ 0.50/0.30 ≈ 1.0–1.7
+        # But since we're modeling the *threat*, we use the inverse framing:
+        # the novelty concern *weakens* evidence, so LR < 1.
+        lr_min: 0.55
+        lr_max: 0.90
+        evidence_type: against
+
+      - node: "Sample ratio mismatch — 1 % more users in treatment arm"
+        # A slight SRM can indicate randomization problems.  1 % mismatch
+        # is within normal variance but worth noting.
+        # LR ≈ 0.85–1.0 (very mild concern)
+        lr_min: 0.85
+        lr_max: 1.0
+        evidence_type: against
