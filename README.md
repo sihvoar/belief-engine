@@ -1,267 +1,249 @@
-# 🌳 Bayes Tree
+# Bayes Tree
 
-**Turn messy debates into math.** Structure arguments as Bayesian evidence trees and let Monte Carlo tell you what to believe.
+**A computational framework for structured Bayesian argumentation under uncertainty.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Python 3.8+](https://img.shields.io/badge/Python-3.8+-green.svg)](https://python.org)
+[![Python 3.9+](https://img.shields.io/badge/Python-3.9+-green.svg)](https://python.org)
 
 ---
 
-## What It Does
+## Abstract
 
-You have a yes/no question. You have evidence — some supporting, some against, all uncertain. Bayes Tree lets you:
+Bayes Tree provides a formal method for evaluating complex hypotheses by decomposing them into hierarchical evidence trees. Each branch carries a likelihood ratio (LR) interval representing the diagnosticity of a piece of evidence. The framework propagates uncertainty through Monte Carlo simulation, yielding posterior probability distributions, sensitivity analyses, and quantitative importance rankings.
 
-1. **Structure** evidence as a tree with likelihood-ratio intervals
-2. **Simulate** thousands of Monte Carlo runs to propagate uncertainty
-3. **See** a posterior distribution, sensitivity analysis, and importance ranking
+The approach bridges informal argumentation and formal probabilistic reasoning — making the logical structure of multi-evidence problems explicit, auditable, and reproducible.
 
-No more gut feelings about complex questions. No more "I read both sides and I'm confused." Quantify it.
+## Motivation
+
+Many important questions in science, history, forensics, and decision-making involve synthesising heterogeneous evidence of varying strength and reliability. Traditional approaches either:
+
+- Rely on qualitative narrative weighing (subjective, non-reproducible), or
+- Require full probabilistic graphical models (high expertise barrier).
+
+Bayes Tree occupies a practical middle ground: it requires only that the analyst estimate *how diagnostic* each piece of evidence is (expressed as a likelihood ratio interval), then handles the combination and uncertainty propagation computationally.
+
+## Method
+
+### Formal Model
+
+Given a binary hypothesis *H* with prior probability *P(H)*, and *n* conditionally independent evidence branches *E₁, …, Eₙ*, each characterised by a likelihood ratio interval *[LR_min, LR_max]*:
+
+1. **Sampling**: For each simulation run, sample *LRᵢ* from the specified distribution (log-uniform by default) over *[LR_min_i, LR_max_i]*.
+
+2. **Combination**: Combine evidence via log-odds summation:
+
+   ```
+   log-odds(posterior) = log-odds(prior) + Σᵢ log(LRᵢ)
+   ```
+
+3. **Propagation**: Repeat for *N* Monte Carlo iterations (default: 10,000) to obtain the posterior distribution.
+
+4. **Analysis**: Compute summary statistics, sensitivity bounds, and leave-one-out importance rankings.
+
+### Hierarchical Structure
+
+- **Root-level children** are combined as independent evidence (log-odds additive).
+- **Sub-children** represent drill-down explanations: the parent's posterior becomes the child's prior, enabling sequential Bayesian chaining within a branch.
+
+### Supported Distributions
+
+| Distribution | Use case |
+|-------------|----------|
+| `log_uniform` (default) | Appropriate when LR uncertainty spans orders of magnitude |
+| `uniform` | When LR uncertainty is symmetric on a linear scale |
+| `beta` | When the analyst has shape information (parameterised via `lr_alpha`, `lr_beta`) |
 
 ## Installation
 
-### Linux / macOS
+```bash
+pip install bayes-tree
+```
+
+Or from source:
 
 ```bash
 git clone https://github.com/sihvoar/belief-engine.git
 cd belief-engine
-./install.sh
+python3 -m venv .venv && source .venv/bin/activate
+pip install -e ".[all]"
 ```
 
-### Windows
+### Dependencies
 
-```
-git clone https://github.com/sihvoar/belief-engine.git
-cd belief-engine
-install.bat
-```
+| Package | Purpose |
+|---------|---------|
+| `pyyaml` | YAML evidence tree parsing |
+| `matplotlib` | Visualisation (optional) |
+| `reportlab` | PDF report generation (optional) |
+| `numpy` | Numerical support (optional) |
 
-The installer creates a `.venv` virtual environment and installs all dependencies automatically.
+## Usage
 
-### Manual install
+### Command-Line Interface
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate        # Linux/macOS
-# .venv\Scripts\activate.bat     # Windows
-pip install -r requirements.txt
+# Standard terminal output with histogram and tree
+bayes-tree examples/napoleon.yaml
+
+# Machine-readable JSON output
+bayes-tree examples/napoleon.yaml --format json
+
+# Prior sensitivity sweep
+bayes-tree examples/napoleon.yaml --prior-sweep
+
+# Specify simulation count
+bayes-tree examples/napoleon.yaml -n 50000
 ```
 
-### Requirements
+### Python API
 
-| Package | Version | Purpose |
-|---------|---------|---------|
-| `pyyaml` | ≥ 5.0 | YAML evidence tree parsing |
-| `PyQt6` | ≥ 6.5.0 | Desktop GUI framework |
-| `matplotlib` | ≥ 3.7.0 | Histogram and bar charts |
-| `reportlab` | ≥ 4.0.0 | PDF report generation |
-| `numpy` | ≥ 1.24.0 | Numerical support for charts |
+```python
+from bayes_tree import run_simulation
+import yaml
 
-> **Note:** Only `pyyaml` is needed for the CLI (`bayes-tree-eng.py`). The GUI and PDF reports require all packages.
+with open("my_analysis.yaml") as f:
+    data = yaml.safe_load(f)
 
-## Quick Start
+results = run_simulation(data, n_sim=10_000)
+print(f"Posterior median: {results['stats']['median']:.2%}")
+print(f"90% CI: [{results['stats']['p5']:.2%} – {results['stats']['p95']:.2%}]")
+```
+
+### GUI
 
 ```bash
-# Launch GUI (auto-installs on first run)
-./bayes-tree.sh
-
-# Open a file directly
-./bayes-tree.sh examples/shroud.yaml
-
-# CLI mode
-./bayes-tree.sh --cli examples/shroud.yaml
+python bayes_tree_gui.py                        # interactive editor
+python bayes_tree_gui.py examples/shroud.yaml   # open existing analysis
 ```
 
-On Windows, use `bayes-tree.bat` instead.
-
-### Desktop GUI
+### Web Demo
 
 ```bash
-python bayes_tree_gui.py                        # new empty tree
-python bayes_tree_gui.py examples/shroud.yaml   # open a file
+streamlit run streamlit_app.py
 ```
 
-The GUI provides:
-- **Interactive evidence tree** — expand/collapse, color-coded evidence types
-- **Node editor** — click any node to edit its name, LR range, and evidence type
-- **Monte Carlo simulation** — threaded with progress bar
-- **Results panel** — summary stats, histogram, sensitivity analysis, importance ranking
-- **PDF report export** — professional multi-page report with charts
-
-## Sample Output
-
-```
-BAYESIAN DECISION TREE  +  MONTE CARLO
-File: shroud.yaml   Simulations: 10,000
-───────────────────────────────────────────────────────
-
-Simulating combined posterior...
-
-  Median   : 1.613%
-  Mean     : 2.037%
-  Std      : 1.507%
-  90% CI   : [0.490%–5.153%]
-  Range    : [0.199%–10.679%]
-
-  Effective LR (90% CI): [0.0049–0.0543]
-  Effective LR median:   0.0164
-
-            0%                   100%
-            ──────────────────────────────────────
-   0.20%–0.72%  ███████████████████████░░░░░░░░░░░░░░░ 684
-   0.72%–1.25%  ██████████████████████████████████████ 1124
-   1.25%–1.77%  ███████████████████████████████░░░░░░░ 944
-   1.77%–2.29%  ███████████████████████░░░░░░░░░░░░░░░ 695
-   2.29%–2.82%  ███████████████░░░░░░░░░░░░░░░░░░░░░░░ 454
-   2.82%–3.34%  ███████████░░░░░░░░░░░░░░░░░░░░░░░░░░░ 335
-   ...
-
-───────────────────────────────────────────────────────
-TREE  (root LR computed from children's distribution)
-───────────────────────────────────────────────────────
-
-Is the Shroud of Turin authentic?
-  Prior:    50.0%
-  Eff. LR:  LR=[0.0051–0.0519] (computed from children's distribution)
-  Median:   1.599%  90% CI [0.510%–4.933%]
-
-├── Radiocarbon dating (-) LR=[0.01–0.05]
-│     50.00% → 2.20% [1.08%–4.39%]
-│   ├── Oxford laboratory (-) LR=[0.05–0.15]
-│   │     2.20% → 0.19% [0.12%–0.32%]
-│   ├── Zürich laboratory (-) LR=[0.05–0.15]
-│   │     2.20% → 0.20% [0.12%–0.32%]
-│   ...
-├── Historical sources (-) LR=[0.05–0.20]
-│     50.00% → 6.42% [3.05%–13.33%]
-├── Image properties (+) LR=[2.00–6.00]
-│     50.00% → 77.28% [66.79%–85.53%]
-└── Wound anatomy (-) LR=[1.50–3.00]
-      50.00% → 67.99% [61.00%–74.26%]
-
-───────────────────────────────────────────────────────
-IMPORTANCE RANKING  (leave-one-out)
-───────────────────────────────────────────────────────
-How much does the posterior change if a branch is removed?
-
-   1. █████████████████████████ ↑ raises 40.9170%
-      (-) Radiocarbon dating
-      Without this: 42.5325%  (baseline: 1.6156%)
-
-   2. ███████░░░░░░░░░░░░░░░░░░ ↑ raises 12.4242%
-      (-) Historical sources
-      Without this: 14.0398%  (baseline: 1.6156%)
-```
-
-## Create Your Own
-
-Model any yes/no question in 5 lines:
+## YAML Specification
 
 ```yaml
-node: "Should I take this job offer?"
-prior: 0.50
-children:
-  - node: "50% salary increase"
-    lr_min: 2.0
-    lr_max: 5.0
-    evidence_type: for
-  - node: "Longer commute (1.5 hours)"
-    lr_min: 0.3
-    lr_max: 0.7
-    evidence_type: against
-  - node: "Company has strong growth trajectory"
-    lr_min: 1.5
-    lr_max: 3.0
-    evidence_type: for
-  - node: "Would lose current team I enjoy"
-    lr_min: 0.4
-    lr_max: 0.8
-    evidence_type: against
-```
-
-Then run it:
-
-```bash
-python bayes-tree-eng.py my_decision.yaml
-```
-
-## YAML Format
-
-```yaml
-node: "Is the hypothesis true?"
-prior: 0.50
+node: "Is the hypothesis H true?"
+prior: 0.50                    # P(H) — prior probability
 
 children:
-  - node: "Supporting evidence A"
-    lr_min: 1.5          # likelihood ratio lower bound
-    lr_max: 4.0          # likelihood ratio upper bound
-    lr_dist: log_uniform # log_uniform (default) | uniform | beta
-    evidence_type: for   # for | against | neutral
+  - node: "Evidence A supports H"
+    lr_min: 1.5                # P(E|H) / P(E|¬H) lower bound
+    lr_max: 4.0                # P(E|H) / P(E|¬H) upper bound
+    lr_dist: log_uniform       # log_uniform | uniform | beta
+    evidence_type: for         # for (LR > 1) | against (LR < 1) | neutral
 
-    children:            # optional sub-evidence (chains sequentially)
-      - node: "Counterpoint to A"
+    children:                  # sub-evidence (sequential chaining)
+      - node: "Counterpoint weakening A"
         lr_min: 0.3
         lr_max: 0.7
         evidence_type: against
 
-  - node: "Counter-evidence B"
+  - node: "Evidence B against H"
     lr_min: 0.05
     lr_max: 0.25
     evidence_type: against
 ```
 
-### Fields
+### Likelihood Ratio Interpretation
 
-| Field | Description |
-|-------|-------------|
-| `node` | Human-readable label for this evidence |
-| `prior` | Prior probability (root node only) |
-| `lr_min`, `lr_max` | Likelihood ratio uncertainty interval |
-| `lr_dist` | Sampling distribution: `log_uniform` (default), `uniform`, `beta` |
-| `likelihood_ratio` | Exact point LR (alternative to min/max interval) |
-| `evidence_type` | `for` (LR > 1), `against` (LR < 1), or `neutral` |
-| `children` | Sub-evidence nodes (optional) |
+| LR | Evidential strength | Equivalent |
+|----|--------------------:|-----------|
+| > 100 | Decisive for *H* | Near-certain proof |
+| 10–100 | Strong for *H* | DNA match, verified document |
+| 2–10 | Moderate for *H* | Credible testimony, correlational data |
+| 1 | Neutral | No evidential value |
+| 0.1–0.5 | Moderate against *H* | Disconfirming witness, failed prediction |
+| 0.01–0.1 | Strong against *H* | Robust replication failure |
+| < 0.01 | Decisive against *H* | Definitive refutation |
 
-### How to Think About Likelihood Ratios
+## Output
 
-| LR | Meaning | Example |
-|----|---------|---------|
-| 10+ | Strong support | DNA match at crime scene |
-| 2–5 | Moderate support | Witness places suspect nearby |
-| 1 | Neutral — no update | Irrelevant information |
-| 0.2–0.5 | Moderate counter-evidence | Alibi from one friend |
-| < 0.1 | Strong counter-evidence | Verified alibi with video |
+The framework produces:
 
-## Architecture
+1. **Posterior distribution** — full Monte Carlo sample with median, mean, standard deviation, and credible intervals.
+2. **Effective likelihood ratio** — the single LR equivalent to the combined evidence.
+3. **Evidence tree** — per-branch prior → posterior transformation with uncertainty.
+4. **Sensitivity analysis** — threshold exceedance probabilities.
+5. **Importance ranking** — leave-one-out analysis identifying which evidence most influences the conclusion.
 
-- **Root level**: children are combined as independent evidence via log-odds summation
-- **Sub-children**: represent drill-down/refinement — parent's posterior becomes child's prior
-- **Monte Carlo**: each run samples LRs from their intervals, producing a posterior distribution
-- **Effective LR**: the single likelihood ratio that would produce the same combined posterior
+### Example Output (Napoleon poisoning hypothesis)
 
-## Output Sections
+```
+Posterior: median 6.6%, mean 8.6%, 90% CI [1.8%–22.2%]
+Effective LR: 0.071 (strong evidence against deliberate poisoning)
 
-1. **Combined posterior** — median, mean, std, 90% CI, histogram
-2. **Evidence tree** — each branch showing prior → posterior with confidence intervals
-3. **Sensitivity analysis** — P(posterior < 5%), P(posterior > 50%), etc.
-4. **Importance ranking** — leave-one-out: which branch matters most?
+Importance ranking:
+  1. Scheele's Green wallpaper explains arsenic   Δ = +20.3%
+  2. Autopsy showed stomach cancer                Δ = +15.6%
+  3. DNA/isotope analyses (2021) support natural   Δ = +15.0%
+```
 
-## Examples
+## Case Studies
 
-| File | Hypothesis |
-|------|-----------|
-| [`god.yaml`](examples/god.yaml) | Does a theistic God exist? |
-| [`shroud.yaml`](examples/shroud.yaml) | Is the Shroud of Turin authentic? |
-| [`empty_grave.yaml`](examples/empty_grave.yaml) | Is the empty tomb later legend? |
-| [`J_grave_historical.yaml`](examples/J_grave_historical.yaml) | Was Jesus's tomb historical and empty? |
-| [`jesus_historicity.yaml`](examples/jesus_historicity.yaml) | Did a historical Jesus of Nazareth exist? (prior: 0.33) |
-| [`jesus_objective.yaml`](examples/jesus_objective.yaml) | Did a historical Jesus of Nazareth exist? (prior: 0.50) |
-| [`moses.yaml`](examples/moses.yaml) | Is there a historical person behind the Moses legend? |
-| [`hitler.yaml`](examples/hitler.yaml) | Was Hitler murdered rather than suicide? |
-| [`napoleon.yaml`](examples/napoleon.yaml) | Was Napoleon deliberately poisoned with arsenic? |
+| Analysis | Hypothesis | Branches | Posterior |
+|----------|-----------|:--------:|-----------|
+| [`napoleon.yaml`](examples/napoleon.yaml) | Napoleon was deliberately poisoned | 8 | ~7% |
+| [`shroud.yaml`](examples/shroud.yaml) | Shroud of Turin is authentic | 6 | ~2% |
+| [`god.yaml`](examples/god.yaml) | A theistic God exists | 10 | varies |
+| [`moses.yaml`](examples/moses.yaml) | Historical person behind Moses legend | 7 | varies |
+| [`hitler.yaml`](examples/hitler.yaml) | Hitler was murdered (not suicide) | 6 | varies |
+| [`jesus_historicity.yaml`](examples/jesus_historicity.yaml) | Historical Jesus existed | 8 | varies |
+| [`empty_grave.yaml`](examples/empty_grave.yaml) | Empty tomb is later legend | 5 | varies |
 
-## Theory
+## Theoretical Foundations
 
-The mathematical foundations (Bayesian updating, log-odds combination, Monte Carlo propagation, limitations) are documented in [`bayes_tree_theory.tex`](bayes_tree_theory.tex).
+The mathematical framework — Bayesian updating, log-odds combination, conditional independence assumptions, Monte Carlo uncertainty propagation, and known limitations — is documented in [`doc/bayes_tree_theory.tex`](doc/bayes_tree_theory.tex).
+
+### Key Properties
+
+- **Commutativity**: Evidence order does not affect the posterior.
+- **Associativity**: Grouping of branches is irrelevant to the combined result.
+- **Monotonicity**: Adding evidence with LR > 1 strictly increases the posterior; LR < 1 strictly decreases it.
+- **Prior sensitivity**: The prior sweep analysis quantifies how robust conclusions are to prior specification.
+
+### Assumptions and Limitations
+
+- **Conditional independence**: Root-level branches are assumed independent given *H*. Correlated evidence should be grouped or discounted.
+- **Analyst calibration**: Results are only as good as the LR estimates. The tool makes reasoning transparent but cannot verify inputs.
+- **Binary hypotheses**: The current framework evaluates *H* vs *¬H*. Multi-hypothesis extensions are planned.
+
+## Validation
+
+The framework includes a comprehensive 50-test validation suite covering:
+
+- Exact Bayesian update arithmetic
+- Numerical stability at extreme values
+- Input validation and error handling
+- Distribution sampling correctness
+- Mathematical properties (commutativity, monotonicity, symmetry)
+- API contract verification
+- Stress testing (50+ branches)
+
+```bash
+python validation/run_validation.py    # run all tests
+python validation/generate_report.py   # generate PDF report
+```
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
+
+## Citation
+
+If you use Bayes Tree in academic work, please cite:
+
+```bibtex
+@software{sihvonen2026bayestree,
+  author  = {Sihvonen, Ari-Pekka},
+  title   = {Bayes Tree: Structured Bayesian Argumentation with Monte Carlo Uncertainty Propagation},
+  year    = {2026},
+  url     = {https://github.com/sihvoar/belief-engine},
+  license = {MIT}
+}
+```
 
 ## License
 
