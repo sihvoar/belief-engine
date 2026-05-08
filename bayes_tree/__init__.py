@@ -16,7 +16,7 @@ Basic usage::
     print(f"Posterior median: {results['stats']['median']:.1%}")
 """
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 from bayes_tree.engine import (
     to_lo,

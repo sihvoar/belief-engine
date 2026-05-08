@@ -49,8 +49,9 @@
 
 \begin{abstract}
 This document describes the theory, implementation, and practical application of
-Bayes Tree, a framework for evaluating complex hypotheses by decomposing them
-into hierarchical evidence trees. Top-level branches act as independent evidence
+Belief Engine (Python package: \texttt{bayes\_tree}), a framework for evaluating
+complex hypotheses by decomposing them into hierarchical evidence trees.
+Top-level branches act as independent---or explicitly correlated---evidence
 combined at the root via likelihood ratios in log-odds space, while Monte Carlo
 simulation propagates uncertainty from likelihood ratio intervals to the
 posterior distribution. We present the formal model, provide systematic methods
@@ -68,16 +69,21 @@ independence---to identify vulnerabilities and generate structured defenses.
 %═══════════════════════════════════════════════════════════════════════════════
 \section{Introduction}
 
-The Bayesian Decision Tree tool combines Bayesian inference with Monte Carlo
-simulation to propagate uncertainty through a tree of evidence. Each branch
-of the tree represents an independent piece of evidence characterized by a
-\emph{likelihood ratio} (LR), and the tool computes a posterior probability
-distribution for the root hypothesis.
+Belief Engine is not an AI that thinks for you---it is a calculator for belief
+revision that forces you to make your assumptions explicit.  The tool combines
+Bayesian inference with Monte Carlo simulation to propagate uncertainty through
+a tree of evidence.  Each branch of the tree represents a piece of evidence
+characterized by a \emph{likelihood ratio} (LR), and the tool computes a
+posterior probability distribution for the root hypothesis.
 
 The motivation is to provide a structured, transparent framework for combining
-multiple heuristic likelihood ratios into a posterior probability. It is useful
+multiple heuristic likelihood ratios into a posterior probability.  It is useful
 for exploratory ``what-if'' analysis, sensitivity studies, and producing an
-interpretable tree of how local evidence shifts beliefs.
+interpretable tree of how local evidence shifts beliefs.  Evidence branches that
+share a common methodological flaw can be tagged with a
+\texttt{correlation\_group} and correlation coefficient $\rho$, so that the
+engine models their dependence via a Gaussian copula rather than assuming
+independence.
 
 %═══════════════════════════════════════════════════════════════════════════════
 \section{Theoretical Background}
@@ -129,7 +135,28 @@ Equivalently, in odds form:
 \end{equation}
 
 The tool computes this at the root level, treating each top-level child as an
-independent evidence source.
+independent evidence source by default.
+
+\subsection{Correlated Evidence (Correlation Groups)}
+
+When two or more branches share a common methodological flaw---for example,
+radiocarbon dates from the same laboratory with the same contamination
+source---the independence assumption is violated.  The tool supports explicit
+modelling of such dependencies via \texttt{correlation\_group} tags.
+
+Branches sharing a group are sampled using a \emph{Gaussian copula}:
+\begin{enumerate}
+\item Generate independent standard normals $Z_1, \ldots, Z_k$ for the $k$
+  grouped branches.
+\item Correlate them: $Z'_j = \rho Z_1 + \sqrt{1-\rho^2}\, Z_j$ for $j \geq 2$,
+  where $\rho$ is the user-specified correlation coefficient.
+\item Transform to uniform quantiles via $U_i = \Phi(Z'_i)$.
+\item Use $U_i$ as the quantile input for each branch's LR sampler (inverse CDF).
+\end{enumerate}
+
+The effect is that positively correlated branches tend to produce extreme LR
+values together, \emph{widening} the posterior distribution and yielding more
+conservative credible intervals.  Non-grouped branches remain independent.
 
 \subsection{Effective Likelihood Ratio}
 
@@ -240,6 +267,10 @@ Each child node represents one piece of evidence:
   # Optional for beta distribution
   lr_alpha: 2               # Beta shape parameter alpha
   lr_beta: 2                # Beta shape parameter beta
+
+  # Optional: correlation with other branches
+  correlation_group: c14    # Group tag (branches with same tag are correlated)
+  rho: 0.7                  # Pearson correlation coefficient (0 to 1)
 
   # Optional sub-evidence (drill-down)
   children:
@@ -774,12 +805,12 @@ The audit produces a verdict:
 
 \begin{itemize}
 \item \textbf{Independence assumption.} Top-level branches are assumed
-  conditionally independent given $H$ and $\neg H$. This is a strong
-  assumption and should be scrutinized when modeling correlated evidence.
-  In practice, if two branches share a common information source, they
-  should be merged or one should be made a sub-node of the other.
-  The adversarial correlation attack (Section~\ref{sec:adversarial}) can
-  quantify the impact of violating this assumption.
+  conditionally independent given $H$ and $\neg H$ by default.  When
+  branches share a common methodological flaw, use
+  \texttt{correlation\_group} and \texttt{rho} to model the dependence
+  explicitly.  The adversarial correlation attack
+  (Section~\ref{sec:adversarial}) can quantify the impact of any remaining
+  unmodeled correlations.
 
 \item \textbf{Children do not aggregate to root.} Children are used only for
   chained drill-down display. If child-level evidence should contribute to

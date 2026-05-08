@@ -113,19 +113,119 @@ def validate_node(data: NodeDict, path: str = "root") -> list[str]:
 
 def sim_root(data: NodeDict) -> tuple[float, float]:
     """
-    Combine all top-level branches as independent evidence (log-odds sum).
+    Combine all top-level branches as evidence (log-odds sum).
+    Supports correlation_group on children for dependent evidence.
     Returns (posterior, effective_lr).
     """
     prior = data.get('prior', 0.5)
+    children = data.get('children', [])
+    if not children:
+        return prior, 1.0
+
     base_lo = to_lo(prior)
+
+    # Check for correlation groups
+    groups: dict[str, list[int]] = {}
+    for i, ch in enumerate(children):
+        grp = ch.get('correlation_group')
+        if grp is not None:
+            groups.setdefault(str(grp), []).append(i)
+
+    # Only groups with 2+ members need correlated sampling
+    corr_groups = {k: v for k, v in groups.items() if len(v) >= 2}
+
+    if not corr_groups:
+        # Fast path: all independent
+        total_lo = base_lo
+        for child in children:
+            lr = sample_lr(child)
+            branch_post = bayes_upd(prior, lr)
+            total_lo += to_lo(branch_post) - base_lo
+        posterior = from_lo(total_lo)
+        return posterior, post_to_lr(prior, posterior)
+
+    # Correlated path: use Gaussian copula for grouped branches
+    n = len(children)
+    z = [random.gauss(0, 1) for _ in range(n)]
+
+    for _grp_name, indices in corr_groups.items():
+        rho = float(children[indices[0]].get('rho', 0.5))
+        # Cholesky-like mixing: correlate all members to the first
+        anchor = indices[0]
+        for member in indices[1:]:
+            z[member] = (rho * z[anchor]
+                         + math.sqrt(max(0, 1 - rho * rho)) * z[member])
+
+    # Convert standard normals to uniform quantiles via CDF
+    def _norm_cdf(x: float) -> float:
+        return 0.5 * (1.0 + math.erf(x / math.sqrt(2)))
+
     total_lo = base_lo
-    for child in data.get('children', []):
-        lr = sample_lr(child)
+    for i, child in enumerate(children):
+        grp = child.get('correlation_group')
+        if grp is not None and str(grp) in corr_groups:
+            lr = _sample_lr_quantile(child, _norm_cdf(z[i]))
+        else:
+            lr = sample_lr(child)
         branch_post = bayes_upd(prior, lr)
         total_lo += to_lo(branch_post) - base_lo
+
     posterior = from_lo(total_lo)
-    eff_lr = post_to_lr(prior, posterior)
-    return posterior, eff_lr
+    return posterior, post_to_lr(prior, posterior)
+
+
+def _sample_lr_quantile(d: NodeDict, u: float) -> float:
+    """Sample LR using a uniform quantile u ∈ [0,1] instead of random."""
+    if 'likelihood_ratio' in d:
+        return float(d['likelihood_ratio'])
+    lo = float(d.get('lr_min', 1.0))
+    hi = float(d.get('lr_max', 1.0))
+    dist = d.get('lr_dist', 'log_uniform')
+    if dist == 'uniform':
+        return lo + u * (hi - lo)
+    elif dist == 'beta':
+        alpha = float(d.get('lr_alpha', 2))
+        beta_p = float(d.get('lr_beta', 2))
+        t = _beta_inv(u, alpha, beta_p)
+        return lo + t * (hi - lo)
+    else:  # log_uniform
+        log_lo = math.log(max(lo, 1e-12))
+        log_hi = math.log(max(hi, 1e-12))
+        return math.exp(log_lo + u * (log_hi - log_lo))
+
+
+def _beta_inv(u: float, a: float, b: float) -> float:
+    """Approximate beta quantile via bisection."""
+    u = max(1e-10, min(1 - 1e-10, u))
+    lo, hi = 0.0, 1.0
+    for _ in range(50):
+        mid = (lo + hi) / 2
+        if _beta_cdf_approx(mid, a, b) < u:
+            lo = mid
+        else:
+            hi = mid
+    return (lo + hi) / 2
+
+
+def _beta_cdf_approx(x: float, a: float, b: float) -> float:
+    """Regularized incomplete beta via simple numerical integration."""
+    if x <= 0:
+        return 0.0
+    if x >= 1:
+        return 1.0
+    n_steps = 200
+    dx = x / n_steps
+    total = 0.0
+    for i in range(n_steps):
+        t = (i + 0.5) * dx
+        total += t ** (a - 1) * (1 - t) ** (b - 1) * dx
+    # Normalize by B(a, b)
+    b_full = 0.0
+    dx_full = 1.0 / n_steps
+    for i in range(n_steps):
+        t = (i + 0.5) * dx_full
+        b_full += t ** (a - 1) * (1 - t) ** (b - 1) * dx_full
+    return total / max(b_full, 1e-30)
 
 
 # ── Statistics ────────────────────────────────────────────────────────────────

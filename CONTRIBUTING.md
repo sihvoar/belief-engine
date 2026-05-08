@@ -1,4 +1,4 @@
-# Contributing to Bayes Tree
+# Contributing to Belief Engine
 
 Thank you for considering contributing! This project benefits from community input — whether that's bug reports, feature suggestions, new example trees, or code improvements.
 

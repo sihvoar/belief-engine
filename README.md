@@ -1,6 +1,8 @@
-# Bayes Tree
+# Belief Engine
 
 **A computational framework for structured Bayesian argumentation under uncertainty.**
+
+*Not an AI that thinks for you — a calculator for belief revision that forces you to make your assumptions explicit.*
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9+-green.svg)](https://python.org)
@@ -9,9 +11,11 @@
 
 ## Abstract
 
-Bayes Tree provides a formal method for evaluating complex hypotheses by decomposing them into hierarchical evidence trees. Each branch carries a likelihood ratio (LR) interval representing the diagnosticity of a piece of evidence. The framework propagates uncertainty through Monte Carlo simulation, yielding posterior probability distributions, sensitivity analyses, and quantitative importance rankings.
+Belief Engine provides a formal method for evaluating complex hypotheses by decomposing them into hierarchical evidence trees. Each branch carries a likelihood ratio (LR) interval representing the diagnosticity of a piece of evidence. The framework propagates uncertainty through Monte Carlo simulation, yielding posterior probability distributions, sensitivity analyses, and quantitative importance rankings.
 
 The approach bridges informal argumentation and formal probabilistic reasoning — making the logical structure of multi-evidence problems explicit, auditable, and reproducible.
+
+> **Note on naming**: The Python import package is `bayes_tree` for historical reasons. The PyPI distribution name is `belief-engine` to avoid confusion with the unrelated phylogenetic "BayesTree" method in bioinformatics.
 
 ## Motivation
 
@@ -20,7 +24,7 @@ Many important questions in science, history, forensics, and decision-making inv
 - Rely on qualitative narrative weighing (subjective, non-reproducible), or
 - Require full probabilistic graphical models (high expertise barrier).
 
-Bayes Tree occupies a practical middle ground: it requires only that the analyst estimate *how diagnostic* each piece of evidence is (expressed as a likelihood ratio interval), then handles the combination and uncertainty propagation computationally.
+Belief Engine occupies a practical middle ground: it requires only that the analyst estimate *how diagnostic* each piece of evidence is (expressed as a likelihood ratio interval), then handles the combination and uncertainty propagation computationally.
 
 ## Method
 
@@ -56,7 +60,7 @@ Given a binary hypothesis *H* with prior probability *P(H)*, and *n* conditional
 ## Installation
 
 ```bash
-pip install bayes-tree
+pip install belief-engine
 ```
 
 Or from source:
@@ -83,17 +87,22 @@ pip install -e ".[all]"
 
 ```bash
 # Standard terminal output with histogram and tree
-bayes-tree examples/napoleon.yaml
+belief-engine examples/napoleon.yaml
 
 # Machine-readable JSON output
-bayes-tree examples/napoleon.yaml --format json
+belief-engine examples/napoleon.yaml --format json
 
 # Prior sensitivity sweep
-bayes-tree examples/napoleon.yaml --prior-sweep
+belief-engine examples/napoleon.yaml --prior-sweep
+
+# Adversarial robustness audit
+belief-engine examples/napoleon.yaml --adversarial
 
 # Specify simulation count
-bayes-tree examples/napoleon.yaml -n 50000
+belief-engine examples/napoleon.yaml -n 50000
 ```
+
+> **Alias**: `bayes-tree` also works as a CLI command for backward compatibility.
 
 ### Python API
 
@@ -141,11 +150,29 @@ children:
         lr_max: 0.7
         evidence_type: against
 
+  - node: "C14 date lab 1"
+    lr_min: 5.0
+    lr_max: 20.0
+    evidence_type: for
+    correlation_group: c14     # shared flaw → correlated sampling
+    rho: 0.7                   # Pearson correlation (0–1)
+
+  - node: "C14 date lab 2"
+    lr_min: 5.0
+    lr_max: 20.0
+    evidence_type: for
+    correlation_group: c14     # same group = Gaussian copula
+    rho: 0.7
+
   - node: "Evidence B against H"
     lr_min: 0.05
     lr_max: 0.25
     evidence_type: against
 ```
+
+### Correlation Groups
+
+When multiple evidence branches share a common methodological flaw (e.g., two radiocarbon dates from the same lab, or witness testimonies from the same source), tag them with a `correlation_group` and `rho` parameter. The engine uses a Gaussian copula to correlate their LR samples, widening the posterior uncertainty to reflect that they do not provide fully independent information.
 
 ### Likelihood Ratio Interpretation
 
@@ -168,6 +195,7 @@ The framework produces:
 3. **Evidence tree** — per-branch prior → posterior transformation with uncertainty.
 4. **Sensitivity analysis** — threshold exceedance probabilities.
 5. **Importance ranking** — leave-one-out analysis identifying which evidence most influences the conclusion.
+6. **Adversarial audit** — systematic robustness testing against plausible attacks on assumptions (prior bias, LR calibration, distribution misspecification, evidence correlation).
 
 ### Example Output (Napoleon poisoning hypothesis)
 
@@ -206,7 +234,7 @@ The mathematical framework — Bayesian updating, log-odds combination, conditio
 
 ### Assumptions and Limitations
 
-- **Conditional independence**: Root-level branches are assumed independent given *H*. Correlated evidence should be grouped or discounted.
+- **Conditional independence**: Root-level branches are assumed independent given *H* by default. Evidence sharing a common flaw can be modeled with `correlation_group` and `rho` parameters, and the adversarial audit can test the impact of unmodeled correlations.
 - **Analyst calibration**: Results are only as good as the LR estimates. The tool makes reasoning transparent but cannot verify inputs.
 - **Binary hypotheses**: The current framework evaluates *H* vs *¬H*. Multi-hypothesis extensions are planned.
 
@@ -233,12 +261,12 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
 
 ## Citation
 
-If you use Bayes Tree in academic work, please cite:
+If you use Belief Engine in academic work, please cite:
 
 ```bibtex
-@software{sihvonen2026bayestree,
+@software{sihvonen2026beliefengine,
   author  = {Sihvonen, Ari-Pekka},
-  title   = {Bayes Tree: Structured Bayesian Argumentation with Monte Carlo Uncertainty Propagation},
+  title   = {Belief Engine: Structured Bayesian Argumentation with Monte Carlo Uncertainty Propagation},
   year    = {2026},
   url     = {https://github.com/sihvoar/belief-engine},
   license = {MIT}

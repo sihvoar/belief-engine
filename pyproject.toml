@@ -3,8 +3,8 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "bayes-tree"
-version = "1.0.0"
+name = "belief-engine"
+version = "1.1.0"
 description = "Bayesian evidence trees with Monte Carlo uncertainty propagation"
 readme = "README.md"
 license = {text = "MIT"}
@@ -38,6 +38,7 @@ all = ["PyQt6>=6.5.0", "matplotlib>=3.7.0", "reportlab>=4.0.0", "numpy>=1.24.0"]
 dev = ["pytest>=7.0", "streamlit>=1.28.0"]
 
 [project.scripts]
+belief-engine = "bayes_tree.cli:main"
 bayes-tree = "bayes_tree.cli:main"
 
 [project.urls]
