@@ -21,129 +21,16 @@ YAML structure:
   evidence_type: against | for | neutral
 """
 
-import sys, math, random, yaml
-from dataclasses import dataclass, field
-from typing import Optional
+import sys, yaml
+
+from bayes_engine import (
+    to_lo, from_lo, bayes_upd, post_to_lr, sample_lr,
+    validate_node, sim_root, pct, sts, collect, NodeResult,
+)
 
 class C:
     RESET="\033[0m"; BOLD="\033[1m"; RED="\033[91m"; GREEN="\033[92m"
     YELLOW="\033[93m"; CYAN="\033[96m"; GRAY="\033[90m"; WHITE="\033[97m"
-
-# ── Bayes ─────────────────────────────────────────────────────────────────────
-def to_lo(p):
-    """Convert probability to log-odds."""
-    p = max(1e-12, min(1-1e-12, p))
-    return math.log(p / (1-p))
-
-def from_lo(lo):
-    """Convert log-odds to probability."""
-    return 1.0 / (1.0 + math.exp(-max(-700, min(700, lo))))
-
-def bayes_upd(prior, lr):
-    """Bayesian update: apply likelihood ratio to prior."""
-    return from_lo(to_lo(prior) + math.log(max(lr, 1e-12)))
-
-def post_to_lr(prior, posterior):
-    """Inverse: given prior and posterior, what LR produced this?"""
-    return math.exp(to_lo(posterior) - to_lo(prior))
-
-def sample_lr(d):
-    """Sample LR from point value or interval."""
-    if 'likelihood_ratio' in d:
-        return float(d['likelihood_ratio'])
-    lo   = float(d.get('lr_min', 1.0))
-    hi   = float(d.get('lr_max', 1.0))
-    dist = d.get('lr_dist', 'log_uniform')
-    if dist == 'uniform':
-        return random.uniform(lo, hi)
-    elif dist == 'beta':
-        t = random.betavariate(float(d.get('lr_alpha',2)), float(d.get('lr_beta',2)))
-        return lo + t*(hi-lo)
-    else:  # log_uniform – best for uncertain small values
-        return math.exp(random.uniform(
-            math.log(max(lo, 1e-12)),
-            math.log(max(hi, 1e-12))
-        ))
-
-# ── Validation ────────────────────────────────────────────────────────────────
-def validate_node(data, path="root"):
-    """Validate node for logical consistency between evidence_type and LR."""
-    warnings = []
-    et   = data.get('evidence_type', 'neutral')
-    lrpt = data.get('likelihood_ratio', None)
-    lrlo = data.get('lr_min', None)
-    lrhi = data.get('lr_max', None)
-
-    if lrpt is not None:
-        lr_center = float(lrpt)
-    elif lrlo is not None and lrhi is not None:
-        lr_center = math.exp((math.log(max(float(lrlo),1e-12)) +
-                               math.log(max(float(lrhi),1e-12))) / 2)
-    else:
-        lr_center = None
-
-    if lr_center is not None:
-        if et == 'for' and lr_center < 1.0:
-            warnings.append(
-                f"  ⚠  '{data['node']}'\n"
-                f"     evidence_type=for but LR mean={lr_center:.3f} < 1.0\n"
-                f"     → LR below 1.0 means counter-evidence"
-            )
-        elif et == 'against' and lr_center > 1.0:
-            warnings.append(
-                f"  ⚠  '{data['node']}'\n"
-                f"     evidence_type=against but LR mean={lr_center:.3f} > 1.0\n"
-                f"     → LR above 1.0 means supporting evidence"
-            )
-
-    if lrlo is not None and lrhi is not None:
-        if float(lrlo) > float(lrhi):
-            warnings.append(
-                f"  ⚠  '{data['node']}'\n"
-                f"     lr_min={lrlo} > lr_max={lrhi} — order is wrong"
-            )
-    if lrlo is not None and float(lrlo) <= 0:
-        warnings.append(
-            f"  ⚠  '{data['node']}'\n"
-            f"     lr_min={lrlo} ≤ 0 — LR cannot be negative or zero"
-        )
-
-    for child in data.get('children', []):
-        warnings.extend(validate_node(child, path + " → " + data['node']))
-    return warnings
-
-# ── Simulation ────────────────────────────────────────────────────────────────
-def sim_root(data):
-    """
-    Combine all top-level branches as independent evidence (log-odds sum).
-    Returns (posterior, effective_lr) to compute root's LR distribution.
-    """
-    prior    = data.get('prior', 0.5)
-    base_lo  = to_lo(prior)
-    total_lo = base_lo
-    for child in data.get('children', []):
-        lr          = sample_lr(child)
-        branch_post = bayes_upd(prior, lr)
-        total_lo   += to_lo(branch_post) - base_lo
-    posterior = from_lo(total_lo)
-    # Effective LR: what single LR would produce the same posterior from prior
-    eff_lr = post_to_lr(prior, posterior)
-    return posterior, eff_lr
-
-# ── Statistics ────────────────────────────────────────────────────────────────
-def pct(data, p):
-    """Compute percentile from sorted data."""
-    sd = sorted(data); idx = (len(sd)-1)*p/100
-    lo, hi = int(idx), math.ceil(idx)
-    return sd[lo] if lo==hi else sd[lo]*(hi-idx)+sd[hi]*(idx-lo)
-
-def sts(samples):
-    """Compute summary statistics."""
-    n=len(samples); m=sum(samples)/n
-    return dict(mean=m, median=pct(samples,50),
-                std=math.sqrt(sum((x-m)**2 for x in samples)/n),
-                p5=pct(samples,5), p95=pct(samples,95),
-                min=min(samples), max=max(samples))
 
 # ── Histogram ─────────────────────────────────────────────────────────────────
 def histogram(samples, bins=20, width=38):
@@ -165,52 +52,6 @@ def histogram(samples, bins=20, width=38):
         col= C.GREEN if mid>=0.5 else (C.YELLOW if mid>=0.25 else C.RED)
         bar= col+"█"*bw+C.RESET+"░"*(width-bw)
         print(f"  {lb:>6.2%}–{hb:<6.2%} {bar} {c}")
-
-# ── Tree view node statistics ─────────────────────────────────────────────────
-@dataclass
-class NR:
-    name:str; etype:str
-    lr_min:float; lr_max:float; lr_pt:Optional[float]
-    lr_derived:bool          # True = computed from children's distribution
-    prior:float; med:float; p5:float; p95:float
-    children:list = field(default_factory=list)
-
-def collect(data, n_sim, prior, is_root=False):
-    """Collect statistics for tree view."""
-    lrpt = data.get('likelihood_ratio', None)
-
-    if is_root:
-        # Root: run full simulation, collect effective LRs
-        results   = [sim_root(data) for _ in range(n_sim)]
-        posteriors = [r[0] for r in results]
-        eff_lrs    = [r[1] for r in results]
-        s      = sts(posteriors)
-        lr_s   = sts(eff_lrs)
-        # Use 5%–95% percentiles as LR interval
-        derived_min = lr_s['p5']
-        derived_max = lr_s['p95']
-        nr = NR(
-            name=data['node'], etype='neutral',
-            lr_min=derived_min, lr_max=derived_max, lr_pt=None,
-            lr_derived=True,
-            prior=prior, med=s['median'], p5=s['p5'], p95=s['p95']
-        )
-        for child in data.get('children', []):
-            nr.children.append(collect(child, n_sim, prior, is_root=False))
-    else:
-        lrlo = float(data.get('lr_min', lrpt or 1.0))
-        lrhi = float(data.get('lr_max', lrpt or 1.0))
-        samples = [bayes_upd(prior, sample_lr(data)) for _ in range(n_sim)]
-        s = sts(samples)
-        nr = NR(
-            name=data['node'], etype=data.get('evidence_type','neutral'),
-            lr_min=lrlo, lr_max=lrhi, lr_pt=lrpt,
-            lr_derived=False,
-            prior=prior, med=s['median'], p5=s['p5'], p95=s['p95']
-        )
-        for child in data.get('children', []):
-            nr.children.append(collect(child, n_sim, s['median'], is_root=False))
-    return nr
 
 # ── Output ────────────────────────────────────────────────────────────────────
 def pc(p):

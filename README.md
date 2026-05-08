@@ -17,12 +17,75 @@ You have a yes/no question. You have evidence — some supporting, some against,
 
 No more gut feelings about complex questions. No more "I read both sides and I'm confused." Quantify it.
 
+## Installation
+
+### Linux / macOS
+
+```bash
+git clone https://github.com/sihvoar/belief-engine.git
+cd belief-engine
+./install.sh
+```
+
+### Windows
+
+```
+git clone https://github.com/sihvoar/belief-engine.git
+cd belief-engine
+install.bat
+```
+
+The installer creates a `.venv` virtual environment and installs all dependencies automatically.
+
+### Manual install
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate        # Linux/macOS
+# .venv\Scripts\activate.bat     # Windows
+pip install -r requirements.txt
+```
+
+### Requirements
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| `pyyaml` | ≥ 5.0 | YAML evidence tree parsing |
+| `PyQt6` | ≥ 6.5.0 | Desktop GUI framework |
+| `matplotlib` | ≥ 3.7.0 | Histogram and bar charts |
+| `reportlab` | ≥ 4.0.0 | PDF report generation |
+| `numpy` | ≥ 1.24.0 | Numerical support for charts |
+
+> **Note:** Only `pyyaml` is needed for the CLI (`bayes-tree-eng.py`). The GUI and PDF reports require all packages.
+
 ## Quick Start
 
 ```bash
-pip install -r requirements.txt
-python bayes-tree-eng.py examples/shroud.yaml
+# Launch GUI (auto-installs on first run)
+./bayes-tree.sh
+
+# Open a file directly
+./bayes-tree.sh examples/shroud.yaml
+
+# CLI mode
+./bayes-tree.sh --cli examples/shroud.yaml
 ```
+
+On Windows, use `bayes-tree.bat` instead.
+
+### Desktop GUI
+
+```bash
+python bayes_tree_gui.py                        # new empty tree
+python bayes_tree_gui.py examples/shroud.yaml   # open a file
+```
+
+The GUI provides:
+- **Interactive evidence tree** — expand/collapse, color-coded evidence types
+- **Node editor** — click any node to edit its name, LR range, and evidence type
+- **Monte Carlo simulation** — threaded with progress bar
+- **Results panel** — summary stats, histogram, sensitivity analysis, importance ranking
+- **PDF report export** — professional multi-page report with charts
 
 ## Sample Output
 
