@@ -38,8 +38,8 @@
   stringstyle=\color{red!70!black},
 }
 
-\title{Bayesian Decision Tree with Monte Carlo Simulation\\[0.5em]
-\large Theory, Implementation, and YAML Configuration Guide}
+\title{Bayesian Evidence Trees with Monte Carlo Uncertainty Propagation\\[0.5em]
+\large Theory, Likelihood Estimation, and Implementation Guide}
 \author{Ari-Pekka Sihvonen\\
 \texttt{ap.sihvonen@gmail.com}}
 \date{\copyright\ 2026 — MIT License}
@@ -48,12 +48,15 @@
 \maketitle
 
 \begin{abstract}
-This document describes the theory, implementation, and usage of
-\texttt{bayes-tree-eng.py}, a tool that encodes hypotheses as Bayesian decision
-trees and uses Monte Carlo simulation to propagate uncertainty. Top-level
-branches act as independent evidence combined at the root via likelihood ratios
-in log-odds space. The tool produces posterior distributions, sensitivity
-analyses, and importance rankings.
+This document describes the theory, implementation, and practical application of
+Bayes Tree, a framework for evaluating complex hypotheses by decomposing them
+into hierarchical evidence trees. Top-level branches act as independent evidence
+combined at the root via likelihood ratios in log-odds space, while Monte Carlo
+simulation propagates uncertainty from likelihood ratio intervals to the
+posterior distribution. We present the formal model, provide systematic methods
+for estimating likelihood ratios from data, expert judgement, and the
+literature, and document the tool's sensitivity analysis and importance ranking
+capabilities.
 \end{abstract}
 
 \tableofcontents
@@ -269,6 +272,225 @@ LR $\ll$ 1 & Strong evidence against \\
 \end{center}
 
 %═══════════════════════════════════════════════════════════════════════════════
+\section{Estimating Likelihood Ratios}
+\label{sec:estimating-lr}
+
+The quality of a Bayes Tree analysis depends on the quality of the likelihood
+ratio estimates assigned to each branch. This section presents systematic
+methods for arriving at defensible LR values, ranging from data-driven
+computation to structured expert judgement.
+
+\subsection{From Data: Frequency-Based Estimation}
+
+When empirical data are available, the likelihood ratio can be computed
+directly from conditional frequencies:
+\begin{equation}
+\text{LR} = \frac{P(E \mid H)}{P(E \mid \neg H)}
+= \frac{\text{rate of evidence } E \text{ when } H \text{ is true}}
+       {\text{rate of evidence } E \text{ when } H \text{ is false}}
+\end{equation}
+
+\paragraph{Example: diagnostic test.}
+A blood test detects a disease in 95\% of true cases (sensitivity = 0.95) and
+produces false positives in 5\% of healthy individuals (1 $-$ specificity = 0.05):
+\[
+\text{LR}^+ = \frac{0.95}{0.05} = 19.0
+\]
+A positive test result is strong evidence for disease
+($\text{LR} \approx 19$). A negative result gives:
+\[
+\text{LR}^- = \frac{1 - 0.95}{1 - 0.05} = \frac{0.05}{0.95} \approx 0.053
+\]
+
+When exact frequencies are uncertain, use the range of plausible values as
+\texttt{lr\_min} and \texttt{lr\_max}. For instance, if sensitivity could be
+90--98\% and specificity 93--97\%:
+\[
+\text{LR}^+_{\min} = \frac{0.90}{0.07} \approx 12.9, \qquad
+\text{LR}^+_{\max} = \frac{0.98}{0.03} \approx 32.7
+\]
+
+\subsection{From Published Studies}
+
+Many empirical fields report results from which LRs can be derived:
+
+\begin{description}
+\item[Relative risk (RR) or odds ratio (OR).] When baseline rates are known,
+  $\text{LR} \approx \text{RR}$ for rare outcomes. For case-control studies,
+  $\text{OR} \approx \text{LR}$ when the sampling fraction is small.
+
+\item[Effect sizes.] Cohen's $d$ can be converted to an approximate LR for
+  observing a value above a threshold:
+  \[
+  \text{LR} \approx \frac{\Phi(\text{threshold} - d)}{\Phi(\text{threshold})}
+  \]
+  where $\Phi$ is the standard normal CDF. For a one-tailed observation at
+  the median ($\text{threshold} = 0$): $\text{LR} = \Phi(-d/2) / \Phi(d/2)$.
+
+\item[Bayes factors.] If a study reports a Bayes factor $\text{BF}_{10}$, this
+  is \emph{already} a likelihood ratio and can be used directly.
+
+\item[Confidence intervals.] A 95\% CI that excludes the null gives a
+  rough lower bound on evidential strength.  The further the CI is from the
+  null, the stronger the evidence.
+\end{description}
+
+\paragraph{Handling uncertainty in published estimates.}
+Use the study's confidence interval or reported range to set
+\texttt{lr\_min}/\texttt{lr\_max}. If a meta-analysis reports
+$\text{OR} = 3.2$ with 95\% CI $[1.8, 5.7]$, assign
+$\texttt{lr\_min} = 1.8$, $\texttt{lr\_max} = 5.7$.
+
+\subsection{From Expert Judgement: Structured Elicitation}
+
+When empirical data are sparse or unavailable, likelihood ratios must be
+elicited from domain expertise. The following structured methods reduce bias.
+
+\subsubsection{The Surprise Test}
+
+Ask: \emph{``How surprised would I be to see this evidence if $H$ were true,
+compared to if $H$ were false?''}
+
+\begin{center}
+\begin{tabular}{lrl}
+\hline
+\textbf{Reaction if $H$ true vs.\ false} & \textbf{Approximate LR} & \textbf{Strength}\\
+\hline
+Equally likely either way & 1 & Neutral \\
+Somewhat more expected if $H$ & 2--3 & Weak \\
+Clearly more expected if $H$ & 5--10 & Moderate \\
+Very surprising if $\neg H$ & 20--50 & Strong \\
+Nearly impossible if $\neg H$ & 100+ & Decisive \\
+\hline
+Somewhat more expected if $\neg H$ & 0.3--0.5 & Weak against \\
+Clearly more expected if $\neg H$ & 0.1--0.2 & Moderate against \\
+Very surprising if $H$ & 0.02--0.05 & Strong against \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsubsection{The Frequency Frame}
+
+Convert the question to a natural frequency to reduce cognitive bias:
+
+\emph{``Out of 1000 cases where $H$ is true, how many would show evidence $E$?
+Out of 1000 cases where $H$ is false, how many would show $E$?''}
+
+If the answers are 800 and 200:
+\[
+\text{LR} = \frac{800/1000}{200/1000} = 4.0
+\]
+
+\subsubsection{The Reference Class Method}
+
+Anchor the estimate to a comparable situation where data exist:
+
+\begin{enumerate}
+\item Identify a structurally similar domain where the same type of evidence
+  has been studied empirically.
+\item Use that domain's LR as a starting point.
+\item Adjust up or down for known differences between the reference and target.
+\item Express residual uncertainty as \texttt{lr\_min}/\texttt{lr\_max}.
+\end{enumerate}
+
+\paragraph{Example.} You need the LR for ``manuscript attributed to author $X$
+by stylometric analysis.'' Stylometric authorship studies in English literature
+typically achieve LRs of 5--50 depending on method and corpus. If your case
+involves an unusually small corpus: $\texttt{lr\_min} = 2$,
+$\texttt{lr\_max} = 15$.
+
+\subsubsection{The Adversarial Test}
+
+For politically or emotionally charged hypotheses, adopt the strongest
+plausible version of the opposing view:
+
+\begin{enumerate}
+\item Estimate $\text{LR}_{\text{proponent}}$: the LR a reasonable proponent
+  of $H$ would assign.
+\item Estimate $\text{LR}_{\text{sceptic}}$: the LR a reasonable sceptic
+  would assign.
+\item Use these as \texttt{lr\_max} and \texttt{lr\_min} respectively.
+\end{enumerate}
+
+This ensures the interval spans the range of defensible interpretations.
+
+\subsection{Calibration Rules of Thumb}
+
+\begin{center}
+\begin{tabular}{rll}
+\hline
+\textbf{LR} & \textbf{Verbal label} & \textbf{Typical source} \\
+\hline
+$> 100$    & Decisive      & Forensic DNA, mathematical proof \\
+$20$--$100$ & Strong        & Controlled experiment, multiple witnesses \\
+$5$--$20$   & Moderate      & Observational study, expert testimony \\
+$2$--$5$    & Weak          & Anecdotal report, weak correlation \\
+$1$         & Neutral       & Irrelevant information \\
+$0.2$--$0.5$ & Weak against  & Minor disconfirmation \\
+$0.05$--$0.2$ & Moderate against & Failed prediction, conflicting data \\
+$0.01$--$0.05$ & Strong against & Robust negative result \\
+$< 0.01$   & Decisive against & Definitive refutation \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Common Pitfalls}
+
+\begin{enumerate}
+\item \textbf{Conflating LR with posterior.} An LR of 10 does \emph{not}
+  mean 90\% probability. It shifts the odds by a factor of 10 --- the
+  posterior depends on the prior.
+
+\item \textbf{Ignoring base rates.} When converting published statistics to
+  LRs, ensure you are computing $P(E|H)/P(E|\neg H)$, not $P(H|E)$.
+
+\item \textbf{Double-counting evidence.} If two branches draw on the same
+  underlying data, they are not independent. Merge them or model one as a
+  sub-child.
+
+\item \textbf{Overconfidence in point estimates.} Unless the LR is known from
+  large-sample data, prefer an interval. Specify \texttt{lr\_min} and
+  \texttt{lr\_max} to represent your genuine uncertainty.
+
+\item \textbf{Anchoring on round numbers.} Analysts tend to assign LRs of
+  exactly 2, 5, or 10. Consider whether 3.5 or 7 might be more accurate.
+
+\item \textbf{Symmetry bias.} Absence of evidence is \emph{not} evidence of
+  absence. If a search for evidence $E$ was conducted and nothing was found,
+  the LR depends on the search's power to detect $E$ if $H$ were true.
+\end{enumerate}
+
+\subsection{Worked Example: Historical Hypothesis}
+
+Consider the hypothesis ``Napoleon was deliberately poisoned with arsenic.''
+
+\paragraph{Evidence: hair samples contain high arsenic.}
+\begin{itemize}
+\item $P(E|H)$: If Napoleon was poisoned, high arsenic in hair is very likely.
+  Estimate: 0.90--0.99.
+\item $P(E|\neg H)$: If not poisoned, Scheele's Green wallpaper, medicines,
+  and environmental arsenic could still produce elevated levels. Studies show
+  this was common in the 19th century. Estimate: 0.40--0.70.
+\item $\text{LR} = P(E|H)/P(E|\neg H)$:
+  $\text{lr\_min} = 0.90/0.70 \approx 1.3$,
+  $\text{lr\_max} = 0.99/0.40 \approx 2.5$.
+\end{itemize}
+
+The evidence is only weakly diagnostic because the alternative explanation
+(environmental arsenic) has high $P(E|\neg H)$.
+
+\paragraph{Evidence: autopsy showed stomach cancer.}
+\begin{itemize}
+\item $P(E|H)$: If poisoned, a stomach ulcer/tumour is possible but not
+  expected. Estimate: 0.10--0.30.
+\item $P(E|\neg H)$: If not poisoned, stomach cancer explains the death
+  directly. Estimate: 0.70--0.90.
+\item $\text{LR} = 0.10/0.90 \approx 0.11$ to $0.30/0.70 \approx 0.43$.
+\end{itemize}
+
+This is moderate evidence \emph{against} poisoning.
+
+%═══════════════════════════════════════════════════════════════════════════════
 \section{Complete YAML Example}
 
 \begin{lstlisting}[language=yaml]
@@ -311,11 +533,20 @@ children:
 \subsection{Running the Tool}
 
 \begin{lstlisting}[language=bash]
-# Default: 10,000 simulations
-python bayes-tree-eng.py examples/mycase.yaml
+# Install
+pip install bayes-tree
+
+# Terminal UI with histogram and tree view
+bayes-tree examples/mycase.yaml
+
+# Machine-readable JSON output
+bayes-tree examples/mycase.yaml --format json
+
+# Prior sensitivity sweep
+bayes-tree examples/mycase.yaml --prior-sweep
 
 # Custom number of simulations
-python bayes-tree-eng.py examples/mycase.yaml 50000
+bayes-tree examples/mycase.yaml -n 50000
 \end{lstlisting}
 
 \subsection{Output Sections}
@@ -401,10 +632,13 @@ The tool produces the following output:
 %═══════════════════════════════════════════════════════════════════════════════
 \section{Dependencies}
 
-The Python script requires:
+The core engine requires:
 \begin{itemize}
-\item Python 3.8+
+\item Python 3.9+
 \item \texttt{PyYAML} (\texttt{pip install pyyaml})
 \end{itemize}
+
+Optional dependencies for visualisation: \texttt{matplotlib}, \texttt{numpy}.
+Optional for PDF reports: \texttt{reportlab}.
 
 \end{document}
