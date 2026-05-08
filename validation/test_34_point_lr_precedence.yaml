@@ -1,0 +1,11 @@
+# Input validation: point LR takes precedence over lr_min/lr_max
+# likelihood_ratio=2.0 should be used; lr_min/lr_max ignored for sampling
+# prior=0.5, LR=2 → posterior = 2/3
+node: "Point LR precedence over range"
+prior: 0.50
+children:
+  - node: "Both point and range specified"
+    likelihood_ratio: 2.0
+    lr_min: 0.1
+    lr_max: 0.3
+    evidence_type: for

@@ -1,0 +1,12 @@
+# Deterministic test: two opposing evidences that exactly cancel
+# Prior=0.5, LR=2 (for) + LR=0.5 (against)
+# Log-odds: 0 + ln(2) + ln(0.5) = 0 → posterior = 0.5 (exact)
+node: "Point LR — cancelling evidence"
+prior: 0.50
+children:
+  - node: "Supporting evidence LR=2"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Counter-evidence LR=0.5"
+    likelihood_ratio: 0.5
+    evidence_type: against

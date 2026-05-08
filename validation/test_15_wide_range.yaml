@@ -1,0 +1,15 @@
+# Edge case: extremely wide LR uncertainty range
+# LR spans from strong-against to strong-for → high variance in posterior
+node: "Wide uncertainty range"
+prior: 0.50
+children:
+  - node: "Highly uncertain evidence"
+    lr_min: 0.01
+    lr_max: 100.0
+    lr_dist: log_uniform
+    evidence_type: neutral
+  - node: "Another wide-range branch"
+    lr_min: 0.05
+    lr_max: 20.0
+    lr_dist: log_uniform
+    evidence_type: neutral

@@ -1,0 +1,7 @@
+# Input validation: negative prior — silent clamp expected
+node: "Negative prior"
+prior: -0.5
+children:
+  - node: "Evidence"
+    likelihood_ratio: 2.0
+    evidence_type: for

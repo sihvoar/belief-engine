@@ -1,0 +1,37 @@
+# Structure test: many children (8 branches)
+# Mix of for/against/neutral with varying strengths
+node: "Many children stress test"
+prior: 0.50
+children:
+  - node: "Strong for"
+    lr_min: 3.0
+    lr_max: 8.0
+    evidence_type: for
+  - node: "Moderate for"
+    lr_min: 1.5
+    lr_max: 3.0
+    evidence_type: for
+  - node: "Weak for"
+    lr_min: 1.1
+    lr_max: 1.5
+    evidence_type: for
+  - node: "Neutral A"
+    lr_min: 0.9
+    lr_max: 1.1
+    evidence_type: neutral
+  - node: "Neutral B"
+    lr_min: 0.85
+    lr_max: 1.15
+    evidence_type: neutral
+  - node: "Weak against"
+    lr_min: 0.6
+    lr_max: 0.9
+    evidence_type: against
+  - node: "Moderate against"
+    lr_min: 0.2
+    lr_max: 0.5
+    evidence_type: against
+  - node: "Strong against"
+    lr_min: 0.05
+    lr_max: 0.2
+    evidence_type: against

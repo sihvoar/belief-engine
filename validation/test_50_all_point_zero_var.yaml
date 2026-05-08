@@ -1,0 +1,14 @@
+# Stress test: all point LRs → zero variance in posterior
+# Every simulation gives identical result → std = 0
+node: "All point LRs — zero variance"
+prior: 0.50
+children:
+  - node: "Point A"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Point B"
+    likelihood_ratio: 3.0
+    evidence_type: for
+  - node: "Point C"
+    likelihood_ratio: 0.5
+    evidence_type: against

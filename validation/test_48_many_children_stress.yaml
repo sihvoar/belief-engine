@@ -1,0 +1,154 @@
+# Stress test: 50 branches
+node: "50-branch stress test"
+prior: 0.50
+children:
+  - node: "Branch 01"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Branch 02"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Branch 03"
+    likelihood_ratio: 0.5
+    evidence_type: against
+  - node: "Branch 04"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Branch 05"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Branch 06"
+    likelihood_ratio: 0.5
+    evidence_type: against
+  - node: "Branch 07"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Branch 08"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Branch 09"
+    likelihood_ratio: 0.5
+    evidence_type: against
+  - node: "Branch 10"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Branch 11"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Branch 12"
+    likelihood_ratio: 0.5
+    evidence_type: against
+  - node: "Branch 13"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Branch 14"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Branch 15"
+    likelihood_ratio: 0.5
+    evidence_type: against
+  - node: "Branch 16"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Branch 17"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Branch 18"
+    likelihood_ratio: 0.5
+    evidence_type: against
+  - node: "Branch 19"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Branch 20"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Branch 21"
+    likelihood_ratio: 0.5
+    evidence_type: against
+  - node: "Branch 22"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Branch 23"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Branch 24"
+    likelihood_ratio: 0.5
+    evidence_type: against
+  - node: "Branch 25"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Branch 26"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Branch 27"
+    likelihood_ratio: 0.5
+    evidence_type: against
+  - node: "Branch 28"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Branch 29"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Branch 30"
+    likelihood_ratio: 0.5
+    evidence_type: against
+  - node: "Branch 31"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Branch 32"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Branch 33"
+    likelihood_ratio: 0.5
+    evidence_type: against
+  - node: "Branch 34"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Branch 35"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Branch 36"
+    likelihood_ratio: 0.5
+    evidence_type: against
+  - node: "Branch 37"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Branch 38"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Branch 39"
+    likelihood_ratio: 0.5
+    evidence_type: against
+  - node: "Branch 40"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Branch 41"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Branch 42"
+    likelihood_ratio: 0.5
+    evidence_type: against
+  - node: "Branch 43"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Branch 44"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Branch 45"
+    likelihood_ratio: 0.5
+    evidence_type: against
+  - node: "Branch 46"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Branch 47"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Branch 48"
+    likelihood_ratio: 0.5
+    evidence_type: against
+  - node: "Branch 49"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Branch 50"
+    likelihood_ratio: 2.0
+    evidence_type: for

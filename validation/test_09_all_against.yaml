@@ -1,0 +1,21 @@
+# Direction test: all evidence against → posterior << prior
+# Four branches all with LR in [0.05, 0.4] → posterior should be well below 0.5
+node: "All evidence against"
+prior: 0.50
+children:
+  - node: "Counter A"
+    lr_min: 0.05
+    lr_max: 0.3
+    evidence_type: against
+  - node: "Counter B"
+    lr_min: 0.1
+    lr_max: 0.4
+    evidence_type: against
+  - node: "Counter C"
+    lr_min: 0.1
+    lr_max: 0.35
+    evidence_type: against
+  - node: "Counter D"
+    lr_min: 0.05
+    lr_max: 0.25
+    evidence_type: against

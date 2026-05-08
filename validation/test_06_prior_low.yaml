@@ -1,0 +1,8 @@
+# Prior edge case: very low prior
+# Prior=0.01, LR=10 → posterior = 0.01*10 / (0.01*10 + 0.99) = 0.1/1.09 ≈ 0.0917
+node: "Low prior with strong supporting evidence"
+prior: 0.01
+children:
+  - node: "Strong evidence LR=10"
+    likelihood_ratio: 10.0
+    evidence_type: for

@@ -1,0 +1,7 @@
+# Numerical edge case: extremely large LR
+node: "Extreme LR — overflow"
+prior: 0.50
+children:
+  - node: "Extremely large LR"
+    likelihood_ratio: 1.0e+300
+    evidence_type: for

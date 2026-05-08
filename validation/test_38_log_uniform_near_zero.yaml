@@ -1,0 +1,10 @@
+# Distribution edge: log_uniform with lr_min near zero
+# sample_lr clamps via max(lo, 1e-12) in log calculation
+node: "Log-uniform near-zero clamp"
+prior: 0.50
+children:
+  - node: "Near-zero lr_min"
+    lr_min: 1.0e-15
+    lr_max: 1.0
+    lr_dist: log_uniform
+    evidence_type: against

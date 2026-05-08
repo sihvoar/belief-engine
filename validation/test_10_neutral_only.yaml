@@ -1,0 +1,17 @@
+# Direction test: only neutral evidence (LR ≈ 1) → posterior ≈ prior
+# LR ranges centered around 1.0
+node: "Neutral evidence only"
+prior: 0.50
+children:
+  - node: "Neutral A"
+    lr_min: 0.9
+    lr_max: 1.1
+    evidence_type: neutral
+  - node: "Neutral B"
+    lr_min: 0.95
+    lr_max: 1.05
+    evidence_type: neutral
+  - node: "Neutral C"
+    lr_min: 0.85
+    lr_max: 1.15
+    evidence_type: neutral

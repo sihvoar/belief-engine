@@ -1,0 +1,8 @@
+# Input validation: only lr_max set (no lr_min)
+# sample_lr defaults lr_min to 1.0, so range is [1.0, 0.3]
+node: "Partial range — only lr_max"
+prior: 0.50
+children:
+  - node: "Only lr_max=0.3 set"
+    lr_max: 0.3
+    evidence_type: against

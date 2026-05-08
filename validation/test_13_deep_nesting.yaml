@@ -1,0 +1,32 @@
+# Structure test: deep nesting (4 levels)
+# Only top-level children contribute to root; deeper nodes are drill-down
+node: "Deep nesting test"
+prior: 0.50
+children:
+  - node: "Level 1 branch"
+    lr_min: 1.5
+    lr_max: 3.0
+    evidence_type: for
+    children:
+      - node: "Level 2 sub-evidence A"
+        lr_min: 1.2
+        lr_max: 2.0
+        evidence_type: for
+        children:
+          - node: "Level 3 detail"
+            lr_min: 1.1
+            lr_max: 1.5
+            evidence_type: for
+            children:
+              - node: "Level 4 deep detail"
+                lr_min: 0.8
+                lr_max: 1.2
+                evidence_type: neutral
+      - node: "Level 2 sub-evidence B"
+        lr_min: 0.3
+        lr_max: 0.7
+        evidence_type: against
+  - node: "Level 1 counter"
+    lr_min: 0.2
+    lr_max: 0.5
+    evidence_type: against

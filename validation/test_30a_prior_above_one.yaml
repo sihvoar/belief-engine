@@ -1,0 +1,7 @@
+# Input validation: prior outside [0,1] — silent clamp expected
+node: "Prior above 1.0"
+prior: 1.5
+children:
+  - node: "Evidence"
+    likelihood_ratio: 2.0
+    evidence_type: for

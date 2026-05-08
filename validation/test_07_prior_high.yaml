@@ -1,0 +1,8 @@
+# Prior edge case: very high prior
+# Prior=0.99, LR=0.1 → posterior = 0.99*0.1 / (0.99*0.1 + 0.01) = 0.099/0.109 ≈ 0.9083
+node: "High prior with counter-evidence"
+prior: 0.99
+children:
+  - node: "Counter-evidence LR=0.1"
+    likelihood_ratio: 0.1
+    evidence_type: against

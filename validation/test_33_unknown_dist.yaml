@@ -1,0 +1,9 @@
+# Input validation: unknown lr_dist silently treated as log_uniform
+node: "Unknown distribution name"
+prior: 0.50
+children:
+  - node: "Gaussian dist (not supported)"
+    lr_min: 1.5
+    lr_max: 4.0
+    lr_dist: gaussian
+    evidence_type: for

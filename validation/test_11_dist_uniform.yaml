@@ -1,0 +1,15 @@
+# Distribution test: uniform distribution
+# Two branches using lr_dist: uniform
+node: "Uniform distribution test"
+prior: 0.50
+children:
+  - node: "Uniform for"
+    lr_min: 1.5
+    lr_max: 4.0
+    lr_dist: uniform
+    evidence_type: for
+  - node: "Uniform against"
+    lr_min: 0.1
+    lr_max: 0.5
+    lr_dist: uniform
+    evidence_type: against

@@ -1,0 +1,16 @@
+# Deterministic test: three mixed evidences with known result
+# Prior=0.5, LR=3 (for) + LR=4 (for) + LR=0.25 (against)
+# Log-odds: 0 + ln(3) + ln(4) + ln(0.25) = ln(3) ≈ 1.0986
+# Posterior = 3/4 = 0.75 (exact)
+node: "Point LR — three mixed branches"
+prior: 0.50
+children:
+  - node: "Strong for LR=3"
+    likelihood_ratio: 3.0
+    evidence_type: for
+  - node: "Strong for LR=4"
+    likelihood_ratio: 4.0
+    evidence_type: for
+  - node: "Against LR=0.25"
+    likelihood_ratio: 0.25
+    evidence_type: against

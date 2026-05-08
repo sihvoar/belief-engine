@@ -1,0 +1,21 @@
+# Direction test: all evidence supporting → posterior >> prior
+# Four branches all with LR in [1.5, 4.0] → posterior should be well above 0.5
+node: "All evidence supporting"
+prior: 0.50
+children:
+  - node: "Supporting A"
+    lr_min: 1.5
+    lr_max: 4.0
+    evidence_type: for
+  - node: "Supporting B"
+    lr_min: 2.0
+    lr_max: 5.0
+    evidence_type: for
+  - node: "Supporting C"
+    lr_min: 1.2
+    lr_max: 3.0
+    evidence_type: for
+  - node: "Supporting D"
+    lr_min: 1.5
+    lr_max: 3.5
+    evidence_type: for

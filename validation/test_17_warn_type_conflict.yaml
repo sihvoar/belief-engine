@@ -1,0 +1,13 @@
+# Warning test: evidence_type conflicts with LR direction
+# Should trigger validation warnings on both children
+node: "Warning — type vs LR conflict"
+prior: 0.50
+children:
+  - node: "Claims 'for' but LR < 1"
+    lr_min: 0.1
+    lr_max: 0.3
+    evidence_type: for
+  - node: "Claims 'against' but LR > 1"
+    lr_min: 2.0
+    lr_max: 5.0
+    evidence_type: against

@@ -1,0 +1,13 @@
+# Warning test: lr_min > lr_max (inverted order)
+# Should trigger a validation warning
+node: "Warning — lr_min greater than lr_max"
+prior: 0.50
+children:
+  - node: "Inverted LR range"
+    lr_min: 5.0
+    lr_max: 1.0
+    evidence_type: for
+  - node: "Normal branch for comparison"
+    lr_min: 1.5
+    lr_max: 3.0
+    evidence_type: for

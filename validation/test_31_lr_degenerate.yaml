@@ -1,0 +1,10 @@
+# Input validation: lr_min == lr_max (degenerate interval)
+# Should behave like a point LR
+# lr_min = lr_max = 2.0, prior=0.5 → posterior = 2/3
+node: "Degenerate interval — lr_min equals lr_max"
+prior: 0.50
+children:
+  - node: "Degenerate range LR=2"
+    lr_min: 2.0
+    lr_max: 2.0
+    evidence_type: for

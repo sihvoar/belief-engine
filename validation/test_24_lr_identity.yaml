@@ -1,0 +1,8 @@
+# Numerical edge case: LR=1.0 exactly (identity update)
+# Posterior should equal prior regardless of prior value
+node: "LR identity — no update"
+prior: 0.30
+children:
+  - node: "Neutral LR=1"
+    likelihood_ratio: 1.0
+    evidence_type: neutral

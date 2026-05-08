@@ -1,0 +1,8 @@
+# Input validation: only lr_min set (no lr_max)
+# sample_lr defaults lr_max to 1.0, so range is [3.0, 1.0] → inverted log_uniform
+node: "Partial range — only lr_min"
+prior: 0.50
+children:
+  - node: "Only lr_min=3.0 set"
+    lr_min: 3.0
+    evidence_type: for

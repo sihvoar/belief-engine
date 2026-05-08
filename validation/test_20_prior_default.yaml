@@ -1,0 +1,7 @@
+# Edge case: no prior specified → should default to 0.5
+# With point LR=2 → posterior should be 2/3 ≈ 0.6667
+node: "Default prior (none specified)"
+children:
+  - node: "Evidence with LR=2"
+    likelihood_ratio: 2.0
+    evidence_type: for

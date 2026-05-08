@@ -1,0 +1,8 @@
+# Deterministic test: single "for" evidence with point LR
+# Prior=0.5, LR=2 → posterior = 2/3 ≈ 0.6667 (exact)
+node: "Point LR — single supporting evidence"
+prior: 0.50
+children:
+  - node: "Evidence with LR=2"
+    likelihood_ratio: 2.0
+    evidence_type: for

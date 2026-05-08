@@ -1,0 +1,65 @@
+# Accumulation underflow: 20 children all with extreme LR=0.01
+# total_lo → very negative, from_lo clamps → posterior ≈ 0.0
+node: "Accumulation underflow — many strong-against"
+prior: 0.50
+children:
+  - node: "Against 01"
+    likelihood_ratio: 0.01
+    evidence_type: against
+  - node: "Against 02"
+    likelihood_ratio: 0.01
+    evidence_type: against
+  - node: "Against 03"
+    likelihood_ratio: 0.01
+    evidence_type: against
+  - node: "Against 04"
+    likelihood_ratio: 0.01
+    evidence_type: against
+  - node: "Against 05"
+    likelihood_ratio: 0.01
+    evidence_type: against
+  - node: "Against 06"
+    likelihood_ratio: 0.01
+    evidence_type: against
+  - node: "Against 07"
+    likelihood_ratio: 0.01
+    evidence_type: against
+  - node: "Against 08"
+    likelihood_ratio: 0.01
+    evidence_type: against
+  - node: "Against 09"
+    likelihood_ratio: 0.01
+    evidence_type: against
+  - node: "Against 10"
+    likelihood_ratio: 0.01
+    evidence_type: against
+  - node: "Against 11"
+    likelihood_ratio: 0.01
+    evidence_type: against
+  - node: "Against 12"
+    likelihood_ratio: 0.01
+    evidence_type: against
+  - node: "Against 13"
+    likelihood_ratio: 0.01
+    evidence_type: against
+  - node: "Against 14"
+    likelihood_ratio: 0.01
+    evidence_type: against
+  - node: "Against 15"
+    likelihood_ratio: 0.01
+    evidence_type: against
+  - node: "Against 16"
+    likelihood_ratio: 0.01
+    evidence_type: against
+  - node: "Against 17"
+    likelihood_ratio: 0.01
+    evidence_type: against
+  - node: "Against 18"
+    likelihood_ratio: 0.01
+    evidence_type: against
+  - node: "Against 19"
+    likelihood_ratio: 0.01
+    evidence_type: against
+  - node: "Against 20"
+    likelihood_ratio: 0.01
+    evidence_type: against

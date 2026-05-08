@@ -1,0 +1,13 @@
+# Edge case: extremely narrow LR uncertainty range (near-deterministic)
+# Narrow ranges ≈ point estimates → low variance in posterior
+node: "Narrow uncertainty range"
+prior: 0.50
+children:
+  - node: "Near-certain for evidence"
+    lr_min: 1.99
+    lr_max: 2.01
+    evidence_type: for
+  - node: "Near-certain against evidence"
+    lr_min: 0.49
+    lr_max: 0.51
+    evidence_type: against

@@ -1,0 +1,19 @@
+# Warning test: validation warning in deeply nested child
+# Top-level child is fine, but grandchild has evidence_type conflict
+node: "Nested validation warning"
+prior: 0.50
+children:
+  - node: "Normal parent"
+    lr_min: 1.5
+    lr_max: 3.0
+    evidence_type: for
+    children:
+      - node: "Normal child"
+        lr_min: 1.2
+        lr_max: 2.0
+        evidence_type: for
+        children:
+          - node: "Bad grandchild — says for but LR < 1"
+            lr_min: 0.1
+            lr_max: 0.3
+            evidence_type: for

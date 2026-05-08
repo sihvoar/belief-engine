@@ -1,0 +1,11 @@
+# Numerical edge case: point LR=0 and LR=-1
+# bayes_upd clamps via max(lr, 1e-12) → should not crash
+node: "Zero and negative LR"
+prior: 0.50
+children:
+  - node: "Zero LR"
+    likelihood_ratio: 0.0
+    evidence_type: against
+  - node: "Negative LR"
+    likelihood_ratio: -1.0
+    evidence_type: against

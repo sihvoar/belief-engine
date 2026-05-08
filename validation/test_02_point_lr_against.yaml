@@ -1,0 +1,8 @@
+# Deterministic test: single "against" evidence with point LR
+# Prior=0.5, LR=0.5 → posterior = 1/3 ≈ 0.3333 (exact)
+node: "Point LR — single counter-evidence"
+prior: 0.50
+children:
+  - node: "Evidence with LR=0.5"
+    likelihood_ratio: 0.5
+    evidence_type: against

@@ -1,0 +1,11 @@
+# Distribution edge: beta(alpha=1, beta=1) should behave like uniform
+node: "Beta(1,1) equivalent to uniform"
+prior: 0.50
+children:
+  - node: "Beta(1,1) branch"
+    lr_min: 1.0
+    lr_max: 5.0
+    lr_dist: beta
+    lr_alpha: 1
+    lr_beta: 1
+    evidence_type: for

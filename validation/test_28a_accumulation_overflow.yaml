@@ -1,0 +1,65 @@
+# Accumulation overflow: 20 children all with extreme LR=100
+# total_lo → very large, from_lo clamps → posterior ≈ 1.0
+node: "Accumulation overflow — many strong-for"
+prior: 0.50
+children:
+  - node: "Strong 01"
+    likelihood_ratio: 100.0
+    evidence_type: for
+  - node: "Strong 02"
+    likelihood_ratio: 100.0
+    evidence_type: for
+  - node: "Strong 03"
+    likelihood_ratio: 100.0
+    evidence_type: for
+  - node: "Strong 04"
+    likelihood_ratio: 100.0
+    evidence_type: for
+  - node: "Strong 05"
+    likelihood_ratio: 100.0
+    evidence_type: for
+  - node: "Strong 06"
+    likelihood_ratio: 100.0
+    evidence_type: for
+  - node: "Strong 07"
+    likelihood_ratio: 100.0
+    evidence_type: for
+  - node: "Strong 08"
+    likelihood_ratio: 100.0
+    evidence_type: for
+  - node: "Strong 09"
+    likelihood_ratio: 100.0
+    evidence_type: for
+  - node: "Strong 10"
+    likelihood_ratio: 100.0
+    evidence_type: for
+  - node: "Strong 11"
+    likelihood_ratio: 100.0
+    evidence_type: for
+  - node: "Strong 12"
+    likelihood_ratio: 100.0
+    evidence_type: for
+  - node: "Strong 13"
+    likelihood_ratio: 100.0
+    evidence_type: for
+  - node: "Strong 14"
+    likelihood_ratio: 100.0
+    evidence_type: for
+  - node: "Strong 15"
+    likelihood_ratio: 100.0
+    evidence_type: for
+  - node: "Strong 16"
+    likelihood_ratio: 100.0
+    evidence_type: for
+  - node: "Strong 17"
+    likelihood_ratio: 100.0
+    evidence_type: for
+  - node: "Strong 18"
+    likelihood_ratio: 100.0
+    evidence_type: for
+  - node: "Strong 19"
+    likelihood_ratio: 100.0
+    evidence_type: for
+  - node: "Strong 20"
+    likelihood_ratio: 100.0
+    evidence_type: for

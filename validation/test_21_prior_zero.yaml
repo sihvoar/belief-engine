@@ -1,0 +1,10 @@
+# Numerical edge case: prior at boundaries 0.0 and 1.0
+# to_lo() clamps: max(1e-12, ...) and min(1-1e-12, ...)
+# prior=0.0 with LR=2 → posterior should still be near 0
+# prior=1.0 with LR=0.5 → posterior should still be near 1
+node: "Prior at zero boundary"
+prior: 0.0
+children:
+  - node: "Evidence LR=2"
+    likelihood_ratio: 2.0
+    evidence_type: for

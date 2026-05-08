@@ -1,0 +1,4 @@
+# Input validation: empty children list → posterior = prior
+node: "Empty children — no evidence"
+prior: 0.35
+children: []

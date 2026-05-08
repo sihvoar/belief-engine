@@ -1,0 +1,12 @@
+# Deterministic test: two supporting evidences combine
+# Prior=0.5, LR=2 + LR=2
+# Log-odds: 0 + ln(2) + ln(2) = 2·ln(2) → posterior = 4/5 = 0.80 (exact)
+node: "Point LR — two supporting branches"
+prior: 0.50
+children:
+  - node: "First supporting evidence LR=2"
+    likelihood_ratio: 2.0
+    evidence_type: for
+  - node: "Second supporting evidence LR=2"
+    likelihood_ratio: 2.0
+    evidence_type: for

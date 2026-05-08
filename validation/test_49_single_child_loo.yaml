@@ -1,0 +1,7 @@
+# Stress test: single child → leave-one-out produces empty children
+node: "Single child LOO test"
+prior: 0.50
+children:
+  - node: "Only child"
+    likelihood_ratio: 3.0
+    evidence_type: for

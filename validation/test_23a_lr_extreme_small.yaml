@@ -1,0 +1,9 @@
+# Numerical edge case: extreme LR values
+# LR=1e-300 → posterior ≈ 0
+# LR=1e+300 → posterior ≈ 1
+node: "Extreme LR — underflow and overflow"
+prior: 0.50
+children:
+  - node: "Extremely small LR"
+    likelihood_ratio: 1.0e-300
+    evidence_type: against
