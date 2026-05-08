@@ -33,6 +33,21 @@ from PyQt6.QtGui import (
 
 import matplotlib
 matplotlib.use('QtAgg')
+matplotlib.rcParams.update({
+    'font.size': 10,
+    'axes.titlesize': 11,
+    'axes.titleweight': '600',
+    'axes.labelcolor': '#57534e',
+    'axes.edgecolor': '#e7e5e4',
+    'axes.spines.top': False,
+    'axes.spines.right': False,
+    'axes.grid': True,
+    'grid.color': '#f5f5f4',
+    'grid.linewidth': 0.8,
+    'xtick.color': '#78716c',
+    'ytick.color': '#78716c',
+    'figure.facecolor': '#ffffff',
+})
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 import matplotlib.ticker as mticker
@@ -190,6 +205,13 @@ class EvidenceTreeModel(QAbstractItemModel):
                 elif etype == 'against':
                     return QColor('#dc2626')
                 return QColor('#6b7280')
+
+        elif role == Qt.ItemDataRole.BackgroundRole:
+            etype = node.evidence_type
+            if etype == 'for':
+                return QColor('#f0fdf4')
+            elif etype == 'against':
+                return QColor('#fef2f2')
 
         elif role == Qt.ItemDataRole.FontRole:
             if col == 0 and node.is_root:
@@ -1137,6 +1159,20 @@ def main():
 
     # Apply a clean style
     app.setStyle('Fusion')
+    app.setStyleSheet("""
+        QWidget { font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; font-size: 10pt; }
+        QGroupBox { border: 1px solid #e7e5e4; border-radius: 6px; margin-top: 12px; padding-top: 8px; font-weight: 600; }
+        QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 6px; color: #57534e; }
+        QPushButton { background: #ffffff; border: 1px solid #d6d3d1; border-radius: 4px; padding: 6px 12px; }
+        QPushButton:hover { background: #f5f5f4; }
+        QTreeView { background: #ffffff; border: 1px solid #e7e5e4; border-radius: 4px; alternate-background-color: #fafaf9; }
+        QTreeView::item { padding: 4px; }
+        QTreeView::item:selected { background: #dbeafe; color: #1e3a8a; }
+        QHeaderView::section { background: #f5f5f4; border: none; border-bottom: 1px solid #e7e5e4; padding: 6px; font-weight: 600; }
+        QToolBar { background: #ffffff; border-bottom: 1px solid #e7e5e4; spacing: 4px; padding: 4px; }
+        QTabBar::tab { padding: 8px 16px; background: transparent; border: none; }
+        QTabBar::tab:selected { border-bottom: 2px solid #3b82f6; color: #1e3a8a; }
+    """)
 
     window = MainWindow()
 
