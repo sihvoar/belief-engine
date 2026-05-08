@@ -195,9 +195,11 @@ if st.button("🎲 Run Simulation", type="primary"):
 
         # Verdict
         if audit.can_flip:
+            flip_info = (f" Flip prior: {audit.flip_prior:.1%}"
+                        if audit.flip_prior is not None else "")
             st.error(
                 f"⚠ **VULNERABLE** — conclusion can be flipped by plausible "
-                f"attacks. Flip prior: {audit.flip_prior:.1%}"
+                f"attacks.{flip_info}"
             )
         else:
             st.success(

@@ -567,9 +567,10 @@ class ResultsPanel(QTabWidget):
 
         # Verdict banner
         if audit.can_flip:
+            flip_info = (f' (flip prior: {audit.flip_prior:.1%})'
+                        if audit.flip_prior is not None else '')
             self.adv_verdict.setText(
-                f'⚠ VULNERABLE — conclusion can be flipped '
-                f'(flip prior: {audit.flip_prior:.1%})')
+                f'⚠ VULNERABLE — conclusion can be flipped{flip_info}')
             self.adv_verdict.setStyleSheet(
                 'background: #fef2f2; color: #991b1b; padding: 8px; '
                 'border: 1px solid #fca5a5; border-radius: 4px;')
