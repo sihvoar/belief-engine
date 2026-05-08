@@ -4,6 +4,7 @@
 *.out
 *.toc
 *.synctex.gz
+*.pdf
 
 # Python
 __pycache__/

@@ -1,0 +1,233 @@
+node: Is atheism (no gods exist) the correct position?
+prior: 0.5
+children:
+- node: Problem of evil and suffering
+  lr_min: 1.5
+  lr_max: 4.0
+  lr_dist: log_uniform
+  evidence_type: for
+  children:
+  - node: Natural disasters and child suffering have no moral justification
+    lr_min: 1.5
+    lr_max: 4.0
+    evidence_type: for
+  - node: Scale and distribution of suffering is gratuitous
+    lr_min: 1.3
+    lr_max: 3.0
+    evidence_type: for
+  - node: Theodicies provide partial explanations (soul-making, free will)
+    lr_min: 0.4
+    lr_max: 0.8
+    evidence_type: against
+- node: Science explains the world without invoking God
+  lr_min: 1.5
+  lr_max: 3.5
+  lr_dist: log_uniform
+  evidence_type: for
+  children:
+  - node: Evolution explains biological complexity and design
+    lr_min: 1.5
+    lr_max: 3.5
+    evidence_type: for
+  - node: Cosmology explains the origin and structure of the universe
+    lr_min: 1.3
+    lr_max: 3.0
+    evidence_type: for
+  - node: Neuroscience explains consciousness and religious experience
+    lr_min: 1.2
+    lr_max: 2.5
+    evidence_type: for
+  - node: Science has not explained why anything exists at all
+    lr_min: 0.4
+    lr_max: 0.8
+    evidence_type: against
+- node: No credible evidence of divine intervention
+  lr_min: 1.3
+  lr_max: 3.0
+  lr_dist: log_uniform
+  evidence_type: for
+  children:
+  - node: No verified miracles survive rigorous investigation
+    lr_min: 1.3
+    lr_max: 3.0
+    evidence_type: for
+  - node: Controlled prayer studies show no effect
+    lr_min: 1.2
+    lr_max: 2.5
+    evidence_type: for
+  - node: Some events remain unexplained and could be interpreted as intervention
+    lr_min: 0.5
+    lr_max: 0.9
+    evidence_type: against
+- node: Psychological and sociological origins of religion
+  lr_min: 1.3
+  lr_max: 2.5
+  lr_dist: log_uniform
+  evidence_type: for
+  children:
+  - node: Hyperactive agent detection (HADD) explains belief in gods
+    lr_min: 1.3
+    lr_max: 2.5
+    evidence_type: for
+  - node: Belief correlates with geography, culture, and upbringing
+    lr_min: 1.2
+    lr_max: 2.5
+    evidence_type: for
+  - node: Religion serves social cohesion and existential comfort
+    lr_min: 1.1
+    lr_max: 2.0
+    evidence_type: for
+  - node: Genetic fallacy — origin does not determine truth
+    lr_min: 0.5
+    lr_max: 0.9
+    evidence_type: against
+- node: Incoherence of classical theistic attributes
+  lr_min: 1.2
+  lr_max: 3.0
+  lr_dist: log_uniform
+  evidence_type: for
+  children:
+  - node: Omnipotence paradox (can God create a stone He cannot lift?)
+    lr_min: 1.1
+    lr_max: 2.0
+    evidence_type: for
+  - node: Omniscience and free will are in tension
+    lr_min: 1.2
+    lr_max: 2.5
+    evidence_type: for
+  - node: Omnibenevolence + omnipotence + evil = logical problem
+    lr_min: 1.3
+    lr_max: 3.0
+    evidence_type: for
+  - node: Reformulated concepts (e.g. Plantinga) reduce the tension
+    lr_min: 0.4
+    lr_max: 0.8
+    evidence_type: against
+- node: Divine hiddenness
+  lr_min: 1.3
+  lr_max: 3.0
+  lr_dist: log_uniform
+  evidence_type: for
+  children:
+  - node: Sincere seekers fail to find evidence of God
+    lr_min: 1.3
+    lr_max: 3.0
+    evidence_type: for
+  - node: A loving God would make Himself knowable
+    lr_min: 1.2
+    lr_max: 2.5
+    evidence_type: for
+  - node: Hiddenness-by-design arguments (e.g. epistemic distance)
+    lr_min: 0.4
+    lr_max: 0.8
+    evidence_type: against
+- node: Parsimony and Occam's razor
+  lr_min: 1.2
+  lr_max: 2.5
+  lr_dist: log_uniform
+  evidence_type: for
+  children:
+  - node: Naturalism explains observations with fewer assumptions
+    lr_min: 1.2
+    lr_max: 2.5
+    evidence_type: for
+  - node: Adding a supernatural entity is an unnecessary postulate
+    lr_min: 1.1
+    lr_max: 10.0
+    evidence_type: for
+    lr_dist: log_uniform
+  - node: Simplicity alone does not determine truth
+    lr_min: 0.5
+    lr_max: 0.9
+    evidence_type: against
+- node: Fine-tuning and cosmological arguments challenge atheism
+  lr_min: 0.5
+  lr_max: 0.99
+  lr_dist: log_uniform
+  evidence_type: against
+  children:
+  - node: Physical constants appear fine-tuned for life
+    lr_min: 0.2
+    lr_max: 0.8999999999999999
+    evidence_type: against
+    lr_dist: log_uniform
+  - node: The universe had a beginning, suggesting a cause
+    lr_min: 1.0
+    lr_max: 1.0
+    evidence_type: against
+    lr_dist: log_uniform
+  - node: Multiverse hypothesis explains tuning without God
+    lr_min: 1.2
+    lr_max: 3.500000000000001
+    evidence_type: for
+    lr_dist: log_uniform
+  - node: Anthropic principle explains apparent fine-tuning
+    lr_min: 1.1
+    lr_max: 2.0
+    evidence_type: for
+- node: Consciousness and subjective experience
+  lr_min: 0.9999999999999999
+  lr_max: 0.9999999999999999
+  lr_dist: log_uniform
+  evidence_type: against
+  children:
+  - node: The hard problem of consciousness lacks materialist solution
+    lr_min: 0.9999999999999999
+    lr_max: 0.9999999999999999
+    evidence_type: against
+    lr_dist: log_uniform
+  - node: Subjective experience seems non-reducible to physics
+    lr_min: 0.9999999999999999
+    lr_max: 0.9999999999999999
+    evidence_type: against
+    lr_dist: log_uniform
+  - node: Neuroscience progress steadily reduces the explanatory gap
+    lr_min: 1.2
+    lr_max: 2.0
+    evidence_type: for
+- node: Moral realism and objective values
+  lr_min: 0.3
+  lr_max: 0.7
+  lr_dist: log_uniform
+  evidence_type: against
+  children:
+  - node: Objective morality seems to require a transcendent ground
+    lr_min: 1.0
+    lr_max: 1.0
+    evidence_type: against
+    lr_dist: log_uniform
+  - node: Moral intuitions are universal across cultures
+    lr_min: 1.0
+    lr_max: 1.0
+    evidence_type: against
+    lr_dist: log_uniform
+  - node: Evolution and social contracts explain morality without God
+    lr_min: 1.3
+    lr_max: 2.5
+    evidence_type: for
+  - node: Euthyphro dilemma undermines God as moral foundation
+    lr_min: 1.1
+    lr_max: 2.0
+    evidence_type: for
+- node: Religious experience as counter-evidence
+  lr_min: 0.3
+  lr_max: 0.7
+  lr_dist: log_uniform
+  evidence_type: against
+  children:
+  - node: Billions report personal experience of the divine
+    lr_min: 0.3
+    lr_max: 0.6
+    evidence_type: against
+  - node: Mystical experiences are remarkably consistent cross-culturally
+    lr_min: 0.4
+    lr_max: 0.8
+    evidence_type: against
+  - node: Experiences are fully explained by neuroscience and psychology
+    lr_min: 1.3
+    lr_max: 2.5
+    evidence_type: for
+  - node: Conflicting religious experiences cancel each other out
+    lr_min: 1.1
+    lr_max: 2.0
+    evidence_type: for

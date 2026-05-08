@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bayes-tree"
+version = "1.0.0"
+description = "Bayesian evidence trees with Monte Carlo uncertainty propagation"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+authors = [
+    {name = "Ari-Pekka Sihvonen"}
+]
+keywords = ["bayesian", "decision-tree", "monte-carlo", "evidence", "reasoning"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Education",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
+dependencies = [
+    "pyyaml>=5.0",
+]
+
+[project.optional-dependencies]
+gui = ["PyQt6>=6.5.0", "matplotlib>=3.7.0", "numpy>=1.24.0"]
+pdf = ["reportlab>=4.0.0", "matplotlib>=3.7.0", "numpy>=1.24.0"]
+all = ["PyQt6>=6.5.0", "matplotlib>=3.7.0", "reportlab>=4.0.0", "numpy>=1.24.0"]
+dev = ["pytest>=7.0", "streamlit>=1.28.0"]
+
+[project.scripts]
+bayes-tree = "bayes_tree.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/sihvoar/belief-engine"
+Repository = "https://github.com/sihvoar/belief-engine"
+Issues = "https://github.com/sihvoar/belief-engine/issues"
+
+[tool.setuptools.packages.find]
+include = ["bayes_tree*"]
+
+[tool.setuptools.package-data]
+bayes_tree = ["examples/*.yaml"]
