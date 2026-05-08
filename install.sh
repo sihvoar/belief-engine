@@ -7,8 +7,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 VENV_DIR="$SCRIPT_DIR/.venv"
-REQ_FILE="$SCRIPT_DIR/requirements.txt"
-MIN_PYTHON="3.8"
+MIN_PYTHON="3.9"
 
 # ── Colours ───────────────────────────────────────────────────
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
@@ -31,7 +30,7 @@ for cmd in python3 python; do
         version=$("$cmd" -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')" 2>/dev/null)
         major=$("$cmd" -c "import sys; print(sys.version_info.major)" 2>/dev/null)
         minor=$("$cmd" -c "import sys; print(sys.version_info.minor)" 2>/dev/null)
-        if [ "$major" -ge 3 ] && [ "$minor" -ge 8 ] 2>/dev/null; then
+        if [ "$major" -ge 3 ] && [ "$minor" -ge 9 ] 2>/dev/null; then
             PYTHON="$cmd"
             break
         fi
@@ -69,7 +68,7 @@ fi
 # ── Install dependencies ─────────────────────────────────────
 info "Installing dependencies..."
 "$VENV_DIR/bin/pip" install --upgrade pip --quiet
-"$VENV_DIR/bin/pip" install -r "$REQ_FILE" --quiet
+"$VENV_DIR/bin/pip" install -e "$SCRIPT_DIR[all]" --quiet
 ok "Dependencies installed"
 
 # ── Verify installation ──────────────────────────────────────

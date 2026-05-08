@@ -7,7 +7,6 @@ setlocal enabledelayedexpansion
 
 set "SCRIPT_DIR=%~dp0"
 set "VENV_DIR=%SCRIPT_DIR%.venv"
-set "REQ_FILE=%SCRIPT_DIR%requirements.txt"
 
 echo.
 echo   🌳 Bayes Tree — Installer
@@ -22,7 +21,7 @@ if %errorlevel% equ 0 (
     for /f "delims=" %%v in ('python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"') do set "PY_VER=%%v"
     for /f "delims=" %%v in ('python -c "import sys; print(sys.version_info.major)"') do set "PY_MAJOR=%%v"
     for /f "delims=" %%v in ('python -c "import sys; print(sys.version_info.minor)"') do set "PY_MINOR=%%v"
-    if !PY_MAJOR! geq 3 if !PY_MINOR! geq 8 (
+    if !PY_MAJOR! geq 3 if !PY_MINOR! geq 9 (
         set "PYTHON=python"
     )
 )
@@ -33,14 +32,14 @@ if not defined PYTHON (
         for /f "delims=" %%v in ('python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"') do set "PY_VER=%%v"
         for /f "delims=" %%v in ('python3 -c "import sys; print(sys.version_info.major)"') do set "PY_MAJOR=%%v"
         for /f "delims=" %%v in ('python3 -c "import sys; print(sys.version_info.minor)"') do set "PY_MINOR=%%v"
-        if !PY_MAJOR! geq 3 if !PY_MINOR! geq 8 (
+        if !PY_MAJOR! geq 3 if !PY_MINOR! geq 9 (
             set "PYTHON=python3"
         )
     )
 )
 
 if not defined PYTHON (
-    echo   [ERROR] Python 3.8+ is required but not found.
+    echo   [ERROR] Python 3.9+ is required but not found.
     echo          Download from https://www.python.org/downloads/
     echo          Make sure to check "Add Python to PATH" during install.
     echo.
@@ -80,7 +79,7 @@ if %errorlevel% neq 0 (
     echo   [WARN] pip upgrade failed, continuing...
 )
 
-"%VENV_DIR%\Scripts\pip.exe" install -r "%REQ_FILE%" --quiet
+"%VENV_DIR%\Scripts\pip.exe" install -e "%SCRIPT_DIR%[all]" --quiet
 if %errorlevel% neq 0 (
     echo   [ERROR] Failed to install dependencies.
     pause
