@@ -49,4 +49,5 @@ __all__ = [
     "NodeResult",
     "NodeDict",
     "__version__",
+    "adversarial",
 ]

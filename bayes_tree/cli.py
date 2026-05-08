@@ -203,6 +203,8 @@ def main():
                         default="text", help="Output format (default: text)")
     parser.add_argument("--prior-sweep", action="store_true",
                         help="Run sensitivity sweep across priors 0.05–0.95")
+    parser.add_argument("--adversarial", action="store_true",
+                        help="Run adversarial audit to find vulnerabilities")
     parser.add_argument("--version", action="version",
                         version="%(prog)s 1.0.0")
     args = parser.parse_args()
@@ -217,6 +219,16 @@ def main():
     except yaml.YAMLError as e:
         print(f"Error: invalid YAML: {e}", file=sys.stderr)
         sys.exit(1)
+
+    # Adversarial audit mode
+    if args.adversarial:
+        from bayes_tree.adversarial import run_audit
+        audit = run_audit(data, n_sim=min(args.simulations, 5000))
+        if args.format == "json":
+            print(audit.to_json())
+        else:
+            print(audit.summary())
+        return
 
     # Prior sweep mode
     if args.prior_sweep:
