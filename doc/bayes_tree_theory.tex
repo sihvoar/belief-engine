@@ -39,7 +39,7 @@
 }
 
 \title{Bayesian Evidence Trees with Monte Carlo Uncertainty Propagation\\[0.5em]
-\large Theory, Likelihood Estimation, and Implementation Guide}
+\large Theory, Likelihood Estimation, Adversarial Analysis, and Implementation Guide}
 \author{Ari-Pekka Sihvonen\\
 \texttt{ap.sihvonen@gmail.com}}
 \date{\copyright\ 2026 — MIT License}
@@ -56,7 +56,10 @@ simulation propagates uncertainty from likelihood ratio intervals to the
 posterior distribution. We present the formal model, provide systematic methods
 for estimating likelihood ratios from data, expert judgement, and the
 literature, and document the tool's sensitivity analysis and importance ranking
-capabilities.
+capabilities. We further introduce an \emph{adversarial robustness analysis}
+framework that systematically challenges tree assumptions---prior specification,
+likelihood ratio calibration, distributional form, and evidence
+independence---to identify vulnerabilities and generate structured defenses.
 \end{abstract}
 
 \tableofcontents
@@ -192,6 +195,7 @@ restructured so that the relevant nodes appear at the top level.
 
 %═══════════════════════════════════════════════════════════════════════════════
 \section{Sensitivity Analysis}
+\label{sec:sensitivity}
 
 The tool provides two sensitivity measures:
 \begin{enumerate}
@@ -547,6 +551,12 @@ bayes-tree examples/mycase.yaml --prior-sweep
 
 # Custom number of simulations
 bayes-tree examples/mycase.yaml -n 50000
+
+# Adversarial robustness audit
+bayes-tree examples/mycase.yaml --adversarial
+
+# Adversarial audit with JSON output
+bayes-tree examples/mycase.yaml --adversarial --format json
 \end{lstlisting}
 
 \subsection{Output Sections}
@@ -562,6 +572,8 @@ The tool produces the following output:
 \item \textbf{Sensitivity analysis} --- Threshold probabilities.
 \item \textbf{Importance ranking} --- Leave-one-out analysis showing which
   branches have the most influence.
+\item \textbf{Adversarial audit} (with \texttt{-{}-adversarial}) --- Robustness
+  report listing plausible attacks, severity ratings, and defense suggestions.
 \end{enumerate}
 
 \subsection{Tips for Creating YAML Files}
@@ -585,6 +597,179 @@ The tool produces the following output:
 \end{enumerate}
 
 %═══════════════════════════════════════════════════════════════════════════════
+\section{Adversarial Robustness Analysis}
+
+A Bayesian evidence tree encodes several assumptions: the prior probability,
+the likelihood ratio estimates, the distributional forms, and the independence
+of top-level branches.  An \emph{adversarial audit} systematically challenges
+each of these assumptions with plausible perturbations, measures the impact on
+the posterior, and reports which assumptions the conclusion is most sensitive
+to.  This mirrors the role of a sceptical peer reviewer who searches for the
+weakest points in an argument.
+
+\subsection{Motivation}
+
+Even a well-constructed evidence tree may be fragile: the conclusion may depend
+critically on a single uncertain LR estimate, or collapse if two branches are
+correlated rather than independent.  Standard sensitivity analysis
+(Section~\ref{sec:sensitivity}) varies one parameter at a time; adversarial
+analysis goes further by (i)~testing specific \emph{types} of methodological
+challenge, (ii)~scoring each attack's real-world \emph{plausibility}, and
+(iii)~searching for \emph{minimal attack combinations} that flip the
+conclusion.
+
+\subsection{Attack Types}
+
+The framework implements four attack classes, each targeting a different
+modelling assumption.
+
+\subsubsection{Prior Bias Attack}
+
+The prior $P(H)$ is often the most contested parameter.  The prior bias attack
+tests robustness by sweeping the prior through a range of values
+$\{0.01, 0.05, 0.10, \ldots, 0.99\}$ and reports:
+\begin{itemize}
+\item The posterior at each perturbed prior.
+\item The \emph{flip prior} $p^*$: the threshold prior above (or below) which
+  the posterior crosses 50\%, found by binary search:
+  \[
+    p^* = \arg\min_p \bigl| \widetilde{P}(H \mid E;\, p) - 0.50 \bigr|
+  \]
+  where $\widetilde{P}$ denotes the median posterior from Monte Carlo
+  simulation with prior $p$.
+\end{itemize}
+
+\subsubsection{LR Calibration Attack}
+
+This attack questions the likelihood ratio estimates by applying two
+perturbations:
+\begin{enumerate}
+\item \textbf{Shrinkage toward neutrality.}  The log-LR is multiplied by a
+  shrinkage factor $\gamma \in \{0.25, 0.50, 0.75\}$:
+  \[
+    \log \text{LR}' = \gamma \cdot \log \text{LR}
+  \]
+  This pulls extreme LR values (both strong support and strong counter-evidence)
+  toward the neutral value $\text{LR} = 1$.
+\item \textbf{Uncertainty expansion.}  The log-space interval
+  $[\log \text{LR}_{\min},\, \log \text{LR}_{\max}]$ is expanded by a factor
+  $\lambda \in \{1.5, 2.0, 3.0\}$ around the centre:
+  \[
+    \log \text{LR}'_{\min/\max}
+      = c \mp \lambda \cdot \tfrac{w}{2},
+    \qquad
+    c = \tfrac{\log \text{LR}_{\min} + \log \text{LR}_{\max}}{2},
+    \quad
+    w = \log \text{LR}_{\max} - \log \text{LR}_{\min}
+  \]
+\end{enumerate}
+
+\subsubsection{Distribution Misspecification Attack}
+
+The choice of sampling distribution (log-uniform, uniform, or beta) affects the
+posterior.  This attack tests the sensitivity to that choice by replacing each
+branch's distribution with alternatives:
+\begin{itemize}
+\item Log-uniform $\to$ uniform, beta($\alpha{=}2, \beta{=}5$), beta($\alpha{=}5, \beta{=}2$)
+\item Uniform $\to$ log-uniform, beta variants
+\end{itemize}
+If the posterior is stable across distributional assumptions, the conclusion is
+more trustworthy.
+
+\subsubsection{Correlation Attack}
+
+The standard model assumes independence of top-level branches.  The correlation
+attack introduces dependence between a pair of branches using a Gaussian copula:
+\begin{enumerate}
+\item Draw correlated standard normals $(Z_1, Z_2)$ with correlation $\rho$:
+  \[
+    \begin{pmatrix} Z_1 \\ Z_2 \end{pmatrix}
+    \sim \mathcal{N}\!\left(
+      \mathbf{0},\,
+      \begin{pmatrix} 1 & \rho \\ \rho & 1 \end{pmatrix}
+    \right)
+  \]
+\item Transform to uniform quantiles via $U_i = \Phi(Z_i)$.
+\item Use $U_i$ as the quantile input for each branch's LR sampler.
+\end{enumerate}
+This is tested for $\rho \in \{0.3, 0.5, 0.7, 0.9\}$.  The attack is most
+plausible when two branches share a common information source.
+
+\subsection{Plausibility Scoring}
+
+Not every mathematically possible attack is realistic.  Each attack receives a
+\emph{plausibility score} on a 0--10 scale, based on:
+\begin{itemize}
+\item \textbf{Evidence type.}  Qualitative evidence (testimony, motive,
+  circumstantial claims) is more attackable than quantitative evidence (DNA,
+  isotope analysis, controlled experiments).
+\item \textbf{LR extremity.}  Very large LR values ($> 100$) are harder to
+  justify and thus more attackable.
+\item \textbf{Correlation context.}  Same-source evidence pairs receive higher
+  correlation plausibility.
+\item \textbf{Prior shift magnitude.}  Small prior shifts are more plausible
+  than extreme ones.
+\end{itemize}
+Only attacks with plausibility $\geq 3.0$ (configurable) are reported.
+
+\subsection{Attack Search}
+
+Given an \emph{attack budget} $k$ (default $k = 3$, modelling a realistic peer
+review), the search algorithm finds the minimal combination of attacks that
+flips the conclusion below a threshold (default 50\%).
+
+The greedy algorithm proceeds as follows:
+\begin{enumerate}
+\item Score each plausible attack by $\text{impact} \times (0.5 + 0.5 \cdot
+  \text{plausibility}/10)$.
+\item Select the highest-scoring attack, apply it to the tree.
+\item Re-evaluate remaining attacks on the modified tree.
+\item Repeat up to $k$ times or until the conclusion flips.
+\end{enumerate}
+
+\subsection{Severity Classification}
+
+Each attack result is classified by the absolute change in posterior median:
+\begin{center}
+\begin{tabular}{lll}
+\textbf{Severity} & $|\Delta \text{posterior}|$ & \textbf{Interpretation} \\
+\hline
+Critical & $> 20\%$ & Conclusion may not survive scrutiny \\
+High     & $> 10\%$ & Significant vulnerability \\
+Moderate & $> 5\%$  & Non-trivial sensitivity \\
+Low      & $\leq 5\%$ & Minor impact \\
+\end{tabular}
+\end{center}
+
+\subsection{Defense Generation}
+
+For each successful attack, the system generates structured defenses:
+\begin{itemize}
+\item \textbf{Prior bias:} Justify the prior with base rates; argue why priors
+  above the flip threshold are unreasonable.
+\item \textbf{LR calibration:} Cite specific studies supporting the LR estimate;
+  compute LR from documented base rates.
+\item \textbf{Misspecification:} Justify the chosen distribution; show
+  robustness by running with all three distributions.
+\item \textbf{Correlation:} Add corroborating independent evidence; document
+  source independence explicitly.
+\end{itemize}
+
+\subsection{Interpreting the Audit}
+
+The audit produces a verdict:
+\begin{itemize}
+\item \textbf{ROBUST:} No high-severity attacks found; the conclusion
+  withstands plausible challenges.
+\item \textbf{CAUTIOUS:} High-severity attacks exist but do not flip the
+  conclusion; additional evidence or justification is recommended.
+\item \textbf{VULNERABLE:} The conclusion can be flipped by a plausible
+  combination of attacks; the argument requires strengthening.
+\end{itemize}
+
+\label{sec:adversarial}
+
+%═══════════════════════════════════════════════════════════════════════════════
 \section{Limitations and Assumptions}
 
 \begin{itemize}
@@ -593,6 +778,8 @@ The tool produces the following output:
   assumption and should be scrutinized when modeling correlated evidence.
   In practice, if two branches share a common information source, they
   should be merged or one should be made a sub-node of the other.
+  The adversarial correlation attack (Section~\ref{sec:adversarial}) can
+  quantify the impact of violating this assumption.
 
 \item \textbf{Children do not aggregate to root.} Children are used only for
   chained drill-down display. If child-level evidence should contribute to
