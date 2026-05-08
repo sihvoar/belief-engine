@@ -1,8 +1,8 @@
 """
 Bayes Tree — Bayesian evidence trees with Monte Carlo uncertainty propagation.
 
-Turn messy debates into math. Structure arguments as Bayesian evidence trees
-and let Monte Carlo tell you what to believe.
+Make your assumptions explicit. Combine uncertain evidence into a posterior
+distribution with calibrated uncertainty propagation.
 
 Basic usage::
 
