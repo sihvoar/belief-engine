@@ -180,6 +180,62 @@ if st.button("🎲 Run Simulation", type="primary"):
         from bayes_tree.cli import _format_json
         st.code(_format_json(results, data), language="json")
 
+    # ── Adversarial audit ────────────────────────────────────────────────
+    st.markdown("---")
+    st.subheader("⚔️ Adversarial Audit")
+    st.markdown(
+        "Test how robust your conclusion is against plausible attacks on "
+        "your assumptions."
+    )
+
+    if st.button("🔍 Run Adversarial Audit"):
+        with st.spinner("Running adversarial audit..."):
+            from bayes_tree.adversarial import run_audit
+            audit = run_audit(data, n_sim=min(n_sim, 5000))
+
+        # Verdict
+        if audit.can_flip:
+            st.error(
+                f"⚠ **VULNERABLE** — conclusion can be flipped by plausible "
+                f"attacks. Flip prior: {audit.flip_prior:.1%}"
+            )
+        else:
+            st.success(
+                "✅ **ROBUST** — no plausible attack combination flips "
+                "the conclusion."
+            )
+
+        # Key metrics
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Attacks Found", len(audit.attacks))
+        n_crit = sum(1 for a in audit.attacks if a.severity in ('critical', 'high'))
+        c2.metric("Critical/High", n_crit)
+        c3.metric("Most Vulnerable", audit.most_vulnerable or "—")
+
+        # Attack details
+        SEVERITY_ICONS = {
+            'critical': '🔴', 'high': '🟠',
+            'moderate': '🟡', 'low': '⚪',
+        }
+        for i, a in enumerate(audit.attacks):
+            icon = SEVERITY_ICONS.get(a.severity, '⚪')
+            label = f"{icon} #{i+1} [{a.severity.upper()}] Δ={a.delta:+.2%}"
+            if a.flips:
+                label += " ← FLIPS"
+            with st.expander(label, expanded=(a.severity in ('critical', 'high'))):
+                st.markdown(f"**Attack:** {a.description}")
+                st.markdown(
+                    f"**Posterior:** {audit.original_median:.2%} → "
+                    f"{audit.original_median + a.delta:.2%}"
+                )
+                st.markdown(
+                    f"**Plausibility:** {a.plausibility:.1f}/10"
+                )
+                if a.defenses:
+                    st.markdown("**Defenses:**")
+                    for d in a.defenses:
+                        st.markdown(f"- {d}")
+
 # ── Footer ───────────────────────────────────────────────────────────────────
 st.sidebar.markdown("---")
 st.sidebar.markdown(

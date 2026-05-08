@@ -264,6 +264,25 @@ class SimulationWorker(QThread):
             self.error.emit(str(e))
 
 
+class AdversarialWorker(QThread):
+    """Run adversarial audit in a background thread."""
+    finished = pyqtSignal(object)  # AuditResult
+    error = pyqtSignal(str)
+
+    def __init__(self, data, n_sim):
+        super().__init__()
+        self.data = data
+        self.n_sim = n_sim
+
+    def run(self):
+        try:
+            from bayes_tree.adversarial import run_audit
+            audit = run_audit(self.data, n_sim=min(self.n_sim, 5000))
+            self.finished.emit(audit)
+        except Exception as e:
+            self.error.emit(str(e))
+
+
 # ── Matplotlib canvas widgets ────────────────────────────────────────────────
 
 class HistogramCanvas(FigureCanvasQTAgg):
@@ -465,6 +484,30 @@ class ResultsPanel(QTabWidget):
         self.importance = ImportanceCanvas()
         self.addTab(self.importance, 'Importance')
 
+        # Adversarial tab
+        self.adv_table = QTableWidget()
+        self.adv_table.setColumnCount(4)
+        self.adv_table.setHorizontalHeaderLabels(
+            ['Severity', 'Attack', 'Δ Posterior', 'Plausibility'])
+        self.adv_table.horizontalHeader().setSectionResizeMode(
+            1, QHeaderView.ResizeMode.Stretch)
+        self.adv_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.adv_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.adv_table.setWordWrap(True)
+
+        adv_widget = QWidget()
+        adv_layout = QVBoxLayout(adv_widget)
+        self.adv_verdict = QLabel('No adversarial audit run yet')
+        self.adv_verdict.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.adv_verdict.setWordWrap(True)
+        font = QFont()
+        font.setBold(True)
+        font.setPointSize(11)
+        self.adv_verdict.setFont(font)
+        adv_layout.addWidget(self.adv_verdict)
+        adv_layout.addWidget(self.adv_table, stretch=1)
+        self.addTab(adv_widget, '⚔️ Adversarial')
+
         self._show_placeholder()
 
     def _show_placeholder(self):
@@ -513,6 +556,64 @@ class ResultsPanel(QTabWidget):
         # Importance
         self.importance.plot(results['importance'])
 
+    def show_adversarial(self, audit):
+        """Display adversarial audit results."""
+        SEVERITY_COLORS = {
+            'critical': '#dc2626',
+            'high': '#ea580c',
+            'moderate': '#ca8a04',
+            'low': '#6b7280',
+        }
+
+        # Verdict banner
+        if audit.can_flip:
+            self.adv_verdict.setText(
+                f'⚠ VULNERABLE — conclusion can be flipped '
+                f'(flip prior: {audit.flip_prior:.1%})')
+            self.adv_verdict.setStyleSheet(
+                'background: #fef2f2; color: #991b1b; padding: 8px; '
+                'border: 1px solid #fca5a5; border-radius: 4px;')
+        else:
+            self.adv_verdict.setText(
+                '✅ ROBUST — no plausible attack combination flips the conclusion')
+            self.adv_verdict.setStyleSheet(
+                'background: #f0fdf4; color: #166534; padding: 8px; '
+                'border: 1px solid #86efac; border-radius: 4px;')
+
+        # Attack table
+        attacks = audit.attacks
+        self.adv_table.setRowCount(len(attacks))
+        for i, a in enumerate(attacks):
+            color = QColor(SEVERITY_COLORS.get(a.severity, '#6b7280'))
+
+            sev_item = QTableWidgetItem(a.severity.upper())
+            sev_item.setForeground(color)
+            sev_font = QFont()
+            sev_font.setBold(True)
+            sev_item.setFont(sev_font)
+            self.adv_table.setItem(i, 0, sev_item)
+
+            desc_item = QTableWidgetItem(a.description)
+            self.adv_table.setItem(i, 1, desc_item)
+
+            delta_item = QTableWidgetItem(f'{a.delta:+.2%}')
+            delta_item.setTextAlignment(
+                Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+            if a.flips:
+                delta_item.setForeground(QColor('#dc2626'))
+                delta_font = QFont()
+                delta_font.setBold(True)
+                delta_item.setFont(delta_font)
+            self.adv_table.setItem(i, 2, delta_item)
+
+            plaus_item = QTableWidgetItem(f'{a.plausibility:.1f}/10')
+            plaus_item.setTextAlignment(
+                Qt.AlignmentFlag.AlignCenter)
+            self.adv_table.setItem(i, 3, plaus_item)
+
+        self.adv_table.resizeRowsToContents()
+        self.setCurrentIndex(self.count() - 1)  # Switch to adversarial tab
+
 
 # ── Main window ──────────────────────────────────────────────────────────────
 
@@ -528,6 +629,7 @@ class MainWindow(QMainWindow):
         self._current_file = None
         self._results = None
         self._worker = None
+        self._adv_worker = None
         self._modified = False
         self._settings = QSettings('BayesTree', 'BayesTreeGUI')
 
@@ -642,6 +744,8 @@ class MainWindow(QMainWindow):
         run_menu = menubar.addMenu('&Run')
         self.act_simulate = run_menu.addAction('&Simulate', self._run_simulation)
         self.act_simulate.setShortcut(QKeySequence('Ctrl+R'))
+        self.act_adversarial = run_menu.addAction('&Adversarial Audit', self._run_adversarial)
+        self.act_adversarial.setShortcut(QKeySequence('Ctrl+Shift+R'))
 
         # Report menu
         report_menu = menubar.addMenu('R&eport')
@@ -664,6 +768,7 @@ class MainWindow(QMainWindow):
         toolbar.addAction('💾 Save', self._save_file)
         toolbar.addSeparator()
         toolbar.addAction('▶ Simulate', self._run_simulation)
+        toolbar.addAction('⚔️ Audit', self._run_adversarial)
         toolbar.addAction('📊 PDF Report', self._generate_report)
         toolbar.addSeparator()
         toolbar.addAction('➕ Add Child', self._add_child)
@@ -913,6 +1018,44 @@ class MainWindow(QMainWindow):
         QMessageBox.critical(self, 'Simulation Error', error_msg)
         self.statusBar().showMessage('Simulation failed')
 
+    # ── Adversarial audit ─────────────────────────────────────────────────
+
+    def _run_adversarial(self):
+        if self._adv_worker and self._adv_worker.isRunning():
+            QMessageBox.information(self, 'Busy', 'Adversarial audit already running.')
+            return
+
+        data = self.tree_model.to_dict()
+        n_sim = self.sim_count_spin.value()
+
+        self.act_adversarial.setEnabled(False)
+        self.statusBar().showMessage('Running adversarial audit...')
+        self.progress_bar.setVisible(True)
+        self.progress_bar.setMaximum(0)  # indeterminate
+
+        self._adv_worker = AdversarialWorker(data, n_sim)
+        self._adv_worker.finished.connect(self._on_adv_finished)
+        self._adv_worker.error.connect(self._on_adv_error)
+        self._adv_worker.start()
+
+    def _on_adv_finished(self, audit):
+        self.progress_bar.setVisible(False)
+        self.progress_bar.setMaximum(100)
+        self.act_adversarial.setEnabled(True)
+        self.results_panel.show_adversarial(audit)
+
+        n_attacks = len(audit.attacks)
+        verdict = 'VULNERABLE' if audit.can_flip else 'ROBUST'
+        self.statusBar().showMessage(
+            f'Adversarial audit: {verdict} — {n_attacks} plausible attacks found')
+
+    def _on_adv_error(self, error_msg):
+        self.progress_bar.setVisible(False)
+        self.progress_bar.setMaximum(100)
+        self.act_adversarial.setEnabled(True)
+        QMessageBox.critical(self, 'Adversarial Audit Error', error_msg)
+        self.statusBar().showMessage('Adversarial audit failed')
+
     # ── Report ────────────────────────────────────────────────────────────
 
     def _generate_report(self):
@@ -934,6 +1077,8 @@ class MainWindow(QMainWindow):
             return
 
         try:
+            _scripts_dir = os.path.dirname(os.path.abspath(__file__))
+            sys.path.insert(0, _scripts_dir)
             from report_generator import generate_report
             fname = self._current_file or 'Untitled'
             generate_report(self._results, fname, path)
